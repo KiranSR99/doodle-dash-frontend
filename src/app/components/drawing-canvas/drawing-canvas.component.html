@@ -1,0 +1,59 @@
+<div class="flex flex-col items-center gap-4">
+    <canvas #canvas class="border bg-white cursor-crosshair mt-5" (mousedown)="startDrawing($event)"
+        (mouseup)="stopDrawing()" (mouseleave)="stopDrawing()" (mousemove)="draw($event)">
+    </canvas>
+
+    <!-- Live Predictions Display -->
+    <div class="w-full max-w-md">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold">Live Predictions</h3>
+            <div *ngIf="isLoading" class="flex items-center text-blue-600">
+                <svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                        fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                Predicting...
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-4 min-h-[120px]">
+            <div *ngIf="predictions.length === 0 && !isLoading" class="text-gray-500 text-center py-4">
+                Start drawing to see live predictions
+            </div>
+
+            <div *ngFor="let pred of predictions; let i = index"
+                class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                <div class="flex items-center">
+                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full mr-3">
+                        {{i + 1}}
+                    </span>
+                    <span class="font-medium">{{pred.label}}</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            [style.width.%]="pred.confidence * 100"></div>
+                    </div>
+                    <span class="text-sm text-gray-600 min-w-[3rem]">
+                        {{(pred.confidence * 100).toFixed(1)}}%
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Control Buttons -->
+    <div class="flex gap-4 mt-2">
+        <button (click)="clearCanvas()"
+            class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors">
+            Clear
+        </button>
+        <!-- <button (click)="sendToApi()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+            Predict Now
+        </button> -->
+    </div>
+</div>
