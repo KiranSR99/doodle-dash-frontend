@@ -7,15 +7,15 @@ export const routes: Routes = [
     },
     {
         path: 'play-solo',
-        loadComponent: () => import('./components/drawing-canvas/drawing-canvas.component').then(m => m.DrawingCanvasComponent)
+        loadComponent: () => import('./components/play-solo/play-solo.component').then(m => m.PlaySoloComponent)
     },
     {
-        path: 'handle-room',
-        loadComponent: () => import('./components/handle-room/handle-room.component').then(m => m.HandleRoomComponent)
+        path: 'room-entry',
+        loadComponent: () => import('./components/room-entry/room-entry.component').then(m => m.RoomEntryComponent)
     },
     {
         path: 'room/:roomCode',
-        loadComponent: () => import('./components/game-room/game-room.component').then(m => m.GameRoomComponent)
+        loadComponent: () => import('./components/lobby/lobby.component').then(m => m.LobbyComponent)
     },
     {
         path: '**',

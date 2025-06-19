@@ -5,21 +5,21 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-drawing-canvas',
   imports: [CommonModule],
-  templateUrl: './drawing-canvas.component.html',
-  styleUrls: ['./drawing-canvas.component.css']
+  templateUrl: './play-solo.component.html',
+  styleUrls: ['./play-solo.component.css']
 })
-export class DrawingCanvasComponent {
+export class PlaySoloComponent {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
   private drawing = false;
   private predictionTimeout: any;
-  
+
   // Live prediction state
   public predictions: any[] = [];
   public isLoading = false;
   public lastPredictionTime = 0;
-  
-  constructor(private http: HttpClient) {}
+
+  constructor(private http: HttpClient) { }
 
   ngOnInit() {
     const canvas = this.canvasRef.nativeElement;
@@ -37,7 +37,7 @@ export class DrawingCanvasComponent {
   stopDrawing() {
     this.drawing = false;
     this.ctx.beginPath();
-    
+
     // Trigger prediction when user stops drawing
     this.schedulePrediction();
   }
@@ -66,7 +66,7 @@ export class DrawingCanvasComponent {
     this.ctx.fillStyle = '#fff';
     this.ctx.fillRect(0, 0, canvas.width, canvas.height);
     this.ctx.beginPath();
-    
+
     // Clear predictions when canvas is cleared
     this.predictions = [];
   }
@@ -89,7 +89,7 @@ export class DrawingCanvasComponent {
     if (now - this.lastPredictionTime < 300) {
       return;
     }
-    
+
     // Check if canvas has content
     if (!this.hasDrawing()) {
       this.predictions = [];
@@ -120,7 +120,7 @@ export class DrawingCanvasComponent {
     const canvas = this.canvasRef.nativeElement;
     const imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
-    
+
     // Check if there are any non-white pixels
     for (let i = 0; i < data.length; i += 4) {
       if (data[i] < 255 || data[i + 1] < 255 || data[i + 2] < 255) {

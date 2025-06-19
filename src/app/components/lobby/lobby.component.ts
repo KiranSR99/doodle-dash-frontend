@@ -15,10 +15,10 @@ interface RoomData {
 @Component({
   selector: 'app-game-room',
   imports: [CommonModule],
-  templateUrl: './game-room.component.html',
-  styleUrl: './game-room.component.css'
+  templateUrl: './lobby.component.html',
+  styleUrl: './lobby.component.css'
 })
-export class GameRoomComponent implements OnInit, OnDestroy {
+export class LobbyComponent implements OnInit, OnDestroy {
   roomCode: string = '';
   currentPlayerName: string = '';
   roomData: RoomData | null = null;

@@ -7,10 +7,10 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-handle-room',
   imports: [FormsModule],
-  templateUrl: './handle-room.component.html',
-  styleUrl: './handle-room.component.css'
+  templateUrl: './room-entry.component.html',
+  styleUrl: './room-entry.component.css'
 })
-export class HandleRoomComponent implements OnInit, OnDestroy {
+export class RoomEntryComponent implements OnInit, OnDestroy {
   username: string = '';
   roomCode: string = '';
   isCreatingRoom: boolean = false;
