@@ -1,6 +1,7 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-drawing-canvas',
@@ -18,6 +19,7 @@ export class PlaySoloComponent {
   public predictions: any[] = [];
   public isLoading = false;
   public lastPredictionTime = 0;
+  private readonly apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
@@ -102,7 +104,7 @@ export class PlaySoloComponent {
     const canvas = this.canvasRef.nativeElement;
     const base64 = canvas.toDataURL('image/png').split(',')[1];
 
-    this.http.post('http://127.0.0.1:5000/api/predict', { image: base64 })
+    this.http.post(`${this.apiUrl}/predict`, { image: base64 })
       .subscribe({
         next: (res: any) => {
           this.predictions = res.predictions || [];
