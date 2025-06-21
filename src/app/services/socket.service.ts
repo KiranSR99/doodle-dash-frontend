@@ -22,6 +22,10 @@ export class SocketService {
     this.socket.emit('join_room', { name, room_code });
   }
 
+  getRoomData(roomCode: string) {
+  this.socket.emit('get_room_data', { room_code: roomCode });
+}
+
   leaveRoom(room_code: string) {
     console.log('[SOCKET] Leaving room:', room_code);
     this.socket.emit('leave_room', { room_code });
@@ -39,6 +43,15 @@ export class SocketService {
     return this.listenToSocketEvent('both_players_ready');
   }
 
+  onRoomData(): Observable<any> {
+  return new Observable(observer => {
+    this.socket.on('room_data', (data) => {
+      console.log('[SOCKET] Room data received:', data);
+      observer.next(data);
+    });
+  });
+}
+
   onError(): Observable<any> {
     return this.listenToSocketEvent('error');
   }
@@ -51,7 +64,6 @@ export class SocketService {
     return this.listenToSocketEvent('player_left');
   }
 
-  // === Utility Methods ===
   disconnect() {
     this.socket.disconnect();
   }
@@ -68,7 +80,7 @@ export class SocketService {
     return new Observable((observer) => {
       this.socket.off(eventName);
       this.socket.on(eventName, (data) => {
-        console.log(`[SOCKET] ${eventName} event received:`, data);
+        // console.log(`[SOCKET] ${eventName} event received:`, data);
         observer.next(data);
       });
     });
