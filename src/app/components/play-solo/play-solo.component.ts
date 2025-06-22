@@ -104,7 +104,7 @@ export class PlaySoloComponent {
     const canvas = this.canvasRef.nativeElement;
     const base64 = canvas.toDataURL('image/png').split(',')[1];
 
-    this.http.post(`${this.apiUrl}/predict`, { image: base64 })
+    this.http.post(`${this.apiUrl}/api/predict`, { image: base64 })
       .subscribe({
         next: (res: any) => {
           this.predictions = res.predictions || [];
