@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PlaySoloComponent } from './play-solo.component';
+import { SoloComponent } from './solo.component';
 
-describe('PlaySoloComponent', () => {
-  let component: PlaySoloComponent;
-  let fixture: ComponentFixture<PlaySoloComponent>;
+describe('SoloComponent', () => {
+  let component: SoloComponent;
+  let fixture: ComponentFixture<SoloComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PlaySoloComponent]
+      imports: [SoloComponent]
     })
       .compileComponents();
 
-    fixture = TestBed.createComponent(PlaySoloComponent);
+    fixture = TestBed.createComponent(SoloComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

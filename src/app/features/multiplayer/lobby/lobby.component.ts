@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { SocketService } from '../../services/socket.service';
 import { CommonModule } from '@angular/common';
+import { SocketService } from '../../../core/services/socket.service';
 interface Player {
   name: string;
   id: string;

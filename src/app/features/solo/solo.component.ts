@@ -6,10 +6,10 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-drawing-canvas',
   imports: [CommonModule],
-  templateUrl: './play-solo.component.html',
-  styleUrls: ['./play-solo.component.css']
+  templateUrl: './solo.component.html',
+  styleUrls: ['./solo.component.css']
 })
-export class PlaySoloComponent {
+export class SoloComponent {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
   private drawing = false;

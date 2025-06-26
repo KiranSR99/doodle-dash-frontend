@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { SocketService } from '../../services/socket.service';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { SocketService } from '../../../core/services/socket.service';
 
 @Component({
   selector: 'app-handle-room',
@@ -37,7 +37,7 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
       this.socketService.onRoomCreated().subscribe(data => {
         console.log('[SOCKET] Room created:', data);
         this.isCreatingRoom = false;
-        this.router.navigate(['/room', data.room_code], {
+        this.router.navigate(['/multiplayer/lobby', data.room_code], {
           state: { playerName: this.username.trim() }
         });
       }),
@@ -45,7 +45,7 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
       this.socketService.onRoomJoined().subscribe(data => {
         console.log('[SOCKET] Joined room:', data);
         this.isJoiningRoom = false;
-        this.router.navigate(['/room', data.room_code], {
+        this.router.navigate(['/multiplayer/lobby', data.room_code], {
           state: { playerName: this.username.trim() }
         });
       }),
