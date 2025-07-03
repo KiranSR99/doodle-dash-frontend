@@ -8,6 +8,7 @@ interface Player {
   id: string;
 }
 interface RoomData {
+  creator: string;
   room_code: string;
   players: Player[];
   status: 'waiting' | 'ready';
@@ -90,6 +91,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   private updateRoomData(data: any): void {
     this.roomData = {
+      creator: data.creator || 'Unknown',
       room_code: data.room_code || this.roomCode,
       players: data.players || [],
       status: data.status || 'waiting'

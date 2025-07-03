@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { TimerComponent } from './shared/components/timer/timer.component';
+import { TestComponent } from './shared/components/test/test.component';
 
 export const routes: Routes = [
     {
@@ -12,6 +14,14 @@ export const routes: Routes = [
     {
         path: 'multiplayer',
         loadChildren: () => import('./features/multiplayer/multiplayer.routes').then(m => m.MULTIPLAYER_ROUTES)
+    },
+    {
+        path: 'timer',
+        component: TimerComponent
+    },
+    {
+        path: 'test',
+        component: TestComponent
     },
     {
         path: '**',

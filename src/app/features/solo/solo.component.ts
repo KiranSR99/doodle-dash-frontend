@@ -2,10 +2,11 @@ import { Component, ViewChild, ElementRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../environments/environment';
+import { TimerComponent } from '../../shared/components/timer/timer.component';
 
 @Component({
   selector: 'app-drawing-canvas',
-  imports: [CommonModule],
+  imports: [CommonModule, TimerComponent],
   templateUrl: './solo.component.html',
   styleUrls: ['./solo.component.css']
 })
@@ -25,7 +26,7 @@ export class SoloComponent {
 
   ngOnInit() {
     const canvas = this.canvasRef.nativeElement;
-    canvas.width = 500;
+    canvas.width = 700;
     canvas.height = 500;
     this.ctx = canvas.getContext('2d')!;
     this.clearCanvas();
