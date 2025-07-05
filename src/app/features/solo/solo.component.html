@@ -1,56 +1,65 @@
-<div class="flex flex-col md:flex-row items-start justify-center gap-6 mt-5">
-    <canvas #canvas class="border bg-white cursor-crosshair" (mousedown)="startDrawing($event)"
-        (mouseup)="stopDrawing()" (mouseleave)="stopDrawing()" (mousemove)="draw($event)">
-    </canvas>
+<!-- Word Prompt (slide-in) -->
+<app-round-detail *ngIf="showPrompt" [round]="currentRound" [totalRounds]="totalRounds" [word]="currentWord"
+    (gotIt)="onGotIt()"></app-round-detail>
 
-    <div class="flex flex-col gap-6 w-full max-w-md">
-        <div>
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-lg font-semibold">Live Predictions</h3>
-                <div *ngIf="isLoading" class="flex items-center text-blue-600">
-                    <svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-                            fill="none"></circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                    </svg>
-                    Predicting...
-                </div>
-            </div>
+<!-- Main Solo UI -->
+<div class="min-h-screen p-4" [class.blur-sm]="showPrompt">
+    <div class="max-w-5xl mx-auto">
 
-            <div class="bg-gray-50 rounded-lg p-4 min-h-[120px]">
-                <div *ngIf="predictions.length === 0 && !isLoading" class="text-gray-500 text-center py-4">
-                    Start drawing to see live predictions
-                </div>
-
-                <div *ngFor="let pred of predictions; let i = index"
-                    class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                    <div class="flex items-center">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full mr-3">
-                            {{i + 1}}
-                        </span>
-                        <span class="font-medium">{{pred.label}}</span>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                [style.width.%]="pred.confidence * 100"></div>
-                        </div>
-                        <span class="text-sm text-gray-600 min-w-[3rem]">
-                            {{(pred.confidence * 100).toFixed(1)}}%
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex justify-end">
-            <button (click)="clearCanvas()"
-                class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors">
-                Clear
+        <!-- Header with Quit Button -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Doodle Dash</h1>
+            <button (click)="quitGame()" class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded-sm">
+                Quit Game
             </button>
         </div>
-        <app-timer></app-timer>
+
+        <!-- Canvas Box -->
+        <div class="bg-white rounded-md overflow-hidden border border-gray-200">
+
+            <!-- Canvas Header with Round, Word, and Timer -->
+            <div class="bg-gray-50 px-6 py-2 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600 font-medium">Round {{ currentRound }}/{{ totalRounds }}</span>
+                    <span class="text-gray-700 font-medium">Draw: {{ currentWord }}</span>
+                    <app-timer [startRound]="startTimer" (timerCompleted)="onTimerComplete()"></app-timer>
+                </div>
+            </div>
+
+            <!-- Canvas Drawing Area -->
+            <div class="p-6">
+                <div class="bg-white">
+                    <canvas #canvas class="mx-auto rounded-md cursor-crosshair border border-gray-400"
+                        (mousedown)="startDrawing($event)" (mouseup)="stopDrawing()" (mouseleave)="stopDrawing()"
+                        (mousemove)="draw($event)">
+                    </canvas>
+                </div>
+
+                <!-- Prediction + Clear Button -->
+                <div class="flex justify-between mt-2 w-[600px] mx-auto">
+                    <div class="text-center text-lg font-semibold text-gray-700">
+                        <ng-container *ngIf="isLoading">
+                            <span class="animate-pulse">Guessing...</span>
+                        </ng-container>
+                        <ng-container *ngIf="!isLoading && predictions.length > 0">
+                            <span *ngIf="predictions[0].confidence < 0.75">
+                                Is it <span class="font-bold">{{ predictions[0].label }}</span>?
+                            </span>
+                            <span *ngIf="predictions[0].confidence >= 0.75">
+                                Oh! I know it's <span class="font-bold text-green-600">{{ predictions[0].label
+                                    }}</span>!
+                            </span>
+                        </ng-container>
+                        <ng-container *ngIf="!isLoading && predictions.length === 0">
+                            <span class="text-gray-400">Start drawing...</span>
+                        </ng-container>
+                    </div>
+
+                    <button (click)="clearCanvas()" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-sm">
+                        Clear Canvas
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

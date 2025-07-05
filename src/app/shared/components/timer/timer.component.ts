@@ -4,7 +4,27 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angu
 @Component({
   selector: 'app-timer',
   imports: [],
-  templateUrl: './timer.component.html',
+  template: `
+    <div class="flex flex-col items-center gap-5 font-sans">
+    <div class="relative w-10 h-10">
+        <svg width="80" height="80" viewBox="0 0 200 200" class="w-full h-full">
+            <!-- Background circle -->
+            <circle cx="100" cy="100" [attr.r]="radius" fill="none" stroke="#f0f0f0" stroke-width="10" />
+
+            <!-- Progress arc -->
+            <circle cx="100" cy="100" [attr.r]="radius" fill="none" stroke="#4a5565" stroke-width="12"
+                stroke-linecap="round" [attr.stroke-dasharray]="circumference"
+                [attr.stroke-dashoffset]="strokeDashoffset" transform="rotate(-90 100 100)"
+                class="transition-all duration-[16ms] linear" />
+        </svg>
+
+        <!-- Timer display -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+            <span class="text-md text-gray-500">{{ displayTime }}</span>
+        </div>
+    </div>
+</div>
+  `,
   styleUrl: './timer.component.css'
 })
 export class TimerComponent implements OnInit, OnDestroy {

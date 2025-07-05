@@ -1,12 +1,13 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
-import { environment } from '../../../environments/environment';
+import { CommonModule, Location } from '@angular/common';
 import { TimerComponent } from '../../shared/components/timer/timer.component';
+import { GameService } from '../../core/services/game.service';
+import { RoundDetailComponent } from '../../shared/components/round-detail/round-detail.component';
 
 @Component({
   selector: 'app-drawing-canvas',
-  imports: [CommonModule, TimerComponent],
+  standalone: true,
+  imports: [CommonModule, TimerComponent, RoundDetailComponent],
   templateUrl: './solo.component.html',
   styleUrls: ['./solo.component.css']
 })
@@ -16,20 +17,58 @@ export class SoloComponent {
   private drawing = false;
   private predictionTimeout: any;
 
-  // Live prediction state
   public predictions: any[] = [];
   public isLoading = false;
   public lastPredictionTime = 0;
-  private readonly apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  public wordsToDraw: any[] = [];
+  public currentRound = 1;
+  public totalRounds = 5;
+  public currentWord = '';
+  public showPrompt = true;
+  public startTimer = false;
+
+  constructor(private gameService: GameService, private location: Location) { }
 
   ngOnInit() {
     const canvas = this.canvasRef.nativeElement;
-    canvas.width = 700;
-    canvas.height = 500;
+    canvas.width = 600;
+    canvas.height = 450;
     this.ctx = canvas.getContext('2d')!;
     this.clearCanvas();
+    this.getWordsToDraw();
+  }
+
+  getWordsToDraw(): void {
+    this.gameService.getWords().subscribe({
+      next: (res: any) => {
+        this.wordsToDraw = res.rounds || [];
+        this.totalRounds = this.wordsToDraw.length;
+        this.currentWord = this.wordsToDraw[0].word;
+      }
+    });
+  }
+
+  onGotIt() {
+    this.showPrompt = false;
+    this.startTimer = true;
+  }
+
+  onTimerComplete() {
+    // Timer finished — move to next round or end game
+    console.log("Timer done for round", this.currentRound);
+    this.startTimer = false;
+    this.currentRound++;
+
+    if (this.currentRound <= this.totalRounds) {
+      this.currentWord = this.wordsToDraw[this.currentRound - 1];
+      this.showPrompt = true;
+      this.clearCanvas();
+      this.predictions = [];
+    } else {
+      alert("Game Over!");
+      this.quitGame();
+    }
   }
 
   startDrawing(event: MouseEvent) {
@@ -40,8 +79,6 @@ export class SoloComponent {
   stopDrawing() {
     this.drawing = false;
     this.ctx.beginPath();
-
-    // Trigger prediction when user stops drawing
     this.schedulePrediction();
   }
 
@@ -60,8 +97,7 @@ export class SoloComponent {
     this.ctx.beginPath();
     this.ctx.moveTo(x, y);
 
-    // Schedule prediction while drawing (throttled)
-    this.schedulePrediction(200); // 200ms delay while drawing
+    this.schedulePrediction(200);
   }
 
   clearCanvas() {
@@ -69,31 +105,17 @@ export class SoloComponent {
     this.ctx.fillStyle = '#fff';
     this.ctx.fillRect(0, 0, canvas.width, canvas.height);
     this.ctx.beginPath();
-
-    // Clear predictions when canvas is cleared
     this.predictions = [];
   }
 
   private schedulePrediction(delay: number = 500) {
-    // Clear existing timeout
-    if (this.predictionTimeout) {
-      clearTimeout(this.predictionTimeout);
-    }
-
-    // Schedule new prediction
-    this.predictionTimeout = setTimeout(() => {
-      this.predictLive();
-    }, delay);
+    if (this.predictionTimeout) clearTimeout(this.predictionTimeout);
+    this.predictionTimeout = setTimeout(() => this.predictLive(), delay);
   }
 
   private predictLive() {
-    // Throttle predictions to avoid too many API calls
     const now = Date.now();
-    if (now - this.lastPredictionTime < 300) {
-      return;
-    }
-
-    // Check if canvas has content
+    if (now - this.lastPredictionTime < 300) return;
     if (!this.hasDrawing()) {
       this.predictions = [];
       return;
@@ -105,41 +127,37 @@ export class SoloComponent {
     const canvas = this.canvasRef.nativeElement;
     const base64 = canvas.toDataURL('image/png').split(',')[1];
 
-    this.http.post(`${this.apiUrl}/api/predict`, { image: base64 })
-      .subscribe({
-        next: (res: any) => {
-          this.predictions = res.predictions || [];
-          this.isLoading = false;
-        },
-        error: err => {
-          console.error('Prediction error:', err);
-          this.isLoading = false;
-          this.predictions = [];
-        }
-      });
+    this.gameService.predictDrawing(base64).subscribe({
+      next: (res: any) => {
+        const top = res.predictions?.[0];
+        this.predictions = top ? [top] : [];
+        this.isLoading = false;
+      },
+      error: err => {
+        console.error('Prediction error:', err);
+        this.predictions = [];
+        this.isLoading = false;
+      }
+    });
   }
 
   private hasDrawing(): boolean {
     const canvas = this.canvasRef.nativeElement;
-    const imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
+    const data = this.ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
-    // Check if there are any non-white pixels
     for (let i = 0; i < data.length; i += 4) {
-      if (data[i] < 255 || data[i + 1] < 255 || data[i + 2] < 255) {
-        return true;
-      }
+      if (data[i] < 255 || data[i + 1] < 255 || data[i + 2] < 255) return true;
     }
     return false;
   }
 
-  sendToApi() {
-    this.predictLive();
+  ngOnDestroy() {
+    if (this.predictionTimeout) clearTimeout(this.predictionTimeout);
   }
 
-  ngOnDestroy() {
-    if (this.predictionTimeout) {
-      clearTimeout(this.predictionTimeout);
+  quitGame() {
+    if (confirm('Are you sure you want to quit the game?')) {
+      this.location.back();
     }
   }
 }

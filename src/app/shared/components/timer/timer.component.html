@@ -5,7 +5,7 @@
             <circle cx="100" cy="100" [attr.r]="radius" fill="none" stroke="#f0f0f0" stroke-width="10" />
 
             <!-- Progress arc -->
-            <circle cx="100" cy="100" [attr.r]="radius" fill="none" stroke="#05df72" stroke-width="10"
+            <circle cx="100" cy="100" [attr.r]="radius" fill="none" stroke="#4a5565" stroke-width="12"
                 stroke-linecap="round" [attr.stroke-dasharray]="circumference"
                 [attr.stroke-dashoffset]="strokeDashoffset" transform="rotate(-90 100 100)"
                 class="transition-all duration-[16ms] linear" />
@@ -13,7 +13,7 @@
 
         <!-- Timer display -->
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-            <span class="text-md font-bold text-gray-800">{{ displayTime }}</span>
+            <span class="text-md text-gray-500">{{ displayTime }}</span>
         </div>
     </div>
 </div>

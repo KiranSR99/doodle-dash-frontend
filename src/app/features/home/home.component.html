@@ -4,7 +4,7 @@
         <p class="text-lg text-gray-600">Unleash your creativity while our trained neural network tries to decode your
             doodles in real-time. Can you outsmart the AI?</p>
         <div class="flex gap-1">
-            <button routerLink="/solo" class="px-4 py-2 bg-green-400 text-white rounded hover:bg-green-600">Play
+            <button (click)="startSoloGame()" class="px-4 py-2 bg-green-400 text-white rounded hover:bg-green-600">Play
                 Solo</button>
             <button routerLink="/multiplayer/room-entry"
                 class="px-4 py-2 border-2 border-green-400 text-green-400 rounded hover:bg-green-400 hover:text-white bg-transparent">Play
@@ -13,3 +13,7 @@
     </div>
 
 </div>
+
+@if(gameStartingCountdown) {
+<app-game-start-countdown (countdownFinished)="gameStartingCountdown = false"></app-game-start-countdown>
+}
