@@ -2,10 +2,21 @@
 <app-round-detail *ngIf="showPrompt" [round]="currentRound" [totalRounds]="totalRounds" [word]="currentWord"
     (gotIt)="onGotIt()"></app-round-detail>
 
-<!-- Main Solo UI -->
-<div class="min-h-screen p-4" [class.blur-sm]="showPrompt">
-    <div class="max-w-5xl mx-auto">
+<!-- Time's Up Message -->
+<div *ngIf="showTimeUp" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-red-500 text-white px-8 py-6 rounded-lg shadow-2xl text-center">
+        <h2 class="text-2xl font-bold mb-2">⏰ Time's Up!</h2>
+        <p class="text-lg">Moving to next round...</p>
+    </div>
+</div>
 
+<!-- Game Stats Modal -->
+<app-game-stats *ngIf="showGameStats" [gameStats]="gameStats" (playAgain)="onPlayAgain()" (quit)="onQuitFromStats()">
+</app-game-stats>
+
+<!-- Main Solo UI -->
+<div class="min-h-screen p-4" [class.blur-sm]="showPrompt || showTimeUp">
+    <div class="max-w-5xl mx-auto">
         <!-- Header with Quit Button -->
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">Doodle Dash</h1>
@@ -16,7 +27,6 @@
 
         <!-- Canvas Box -->
         <div class="bg-white rounded-md overflow-hidden border border-gray-200">
-
             <!-- Canvas Header with Round, Word, and Timer -->
             <div class="bg-gray-50 px-6 py-2 border-b border-gray-200">
                 <div class="flex items-center justify-between">
@@ -45,16 +55,20 @@
                             <span *ngIf="predictions[0].confidence < 0.75">
                                 Is it <span class="font-bold">{{ predictions[0].label }}</span>?
                             </span>
-                            <span *ngIf="predictions[0].confidence >= 0.75">
-                                Oh! I know it's <span class="font-bold text-green-600">{{ predictions[0].label
-                                    }}</span>!
+                            <span
+                                *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() === currentWord.toLowerCase()">
+                                <span class="font-bold text-green-600 animate-pulse">🎉 Correct! {{ predictions[0].label
+                                    }}</span>
+                            </span>
+                            <span
+                                *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() !== currentWord.toLowerCase()">
+                                It's a <span class="font-bold text-blue-600">{{ predictions[0].label }}</span>!
                             </span>
                         </ng-container>
                         <ng-container *ngIf="!isLoading && predictions.length === 0">
                             <span class="text-gray-400">Start drawing...</span>
                         </ng-container>
                     </div>
-
                     <button (click)="clearCanvas()" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-sm">
                         Clear Canvas
                     </button>

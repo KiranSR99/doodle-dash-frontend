@@ -11,12 +11,15 @@ export class RoundDetailComponent {
   @Input() round = 1;
   @Input() totalRounds = 5;
   @Input() word = '';
-  @Input() visible = true;
   @Output() gotIt = new EventEmitter<void>();
 
+  public isVisible = true;
+
   onGotIt() {
-    this.visible = false;
-    setTimeout(() => this.gotIt.emit(), 500);
+    this.isVisible = false;
+    setTimeout(() => {
+      this.gotIt.emit();
+    }, 500);
   }
 
 }

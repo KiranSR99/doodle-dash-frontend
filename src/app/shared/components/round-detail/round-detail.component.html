@@ -1,10 +1,11 @@
-<div class="fixed top-0 left-0 w-full z-50 transition-transform duration-500 ease-in-out"
-    [ngClass]="{ 'translate-y-0': visible, '-translate-y-full': !visible }">
-    <div class="bg-yellow-300 text-black text-center p-6 shadow-lg rounded-b-2xl">
-        <h2 class="text-xl font-bold">Round {{ round }} of {{ totalRounds }}</h2>
-        <p class="text-lg mt-2">Draw: <span class="font-semibold">{{ word }}</span></p>
-        <button (click)="onGotIt()" class="mt-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition">
-            Got it!
+<div class="fixed inset-0 bg-green-400 z-50 flex items-center justify-center transition-transform duration-500 ease-in-out"
+    [ngClass]="{ 'translate-y-0': isVisible, '-translate-y-full': !isVisible }">
+    <div class="text-black text-center">
+        <h2 class="text-3xl font-bold mb-4">Round {{ round }} of {{ totalRounds }}</h2>
+        <p class="text-xl mb-6">Draw: <span class="font-bold text-2xl">{{ word }}</span></p>
+        <button (click)="onGotIt()"
+            class="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-lg font-medium">
+            Got it! Let's Draw!
         </button>
     </div>
 </div>

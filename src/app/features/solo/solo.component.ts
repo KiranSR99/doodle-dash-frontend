@@ -3,11 +3,11 @@ import { CommonModule, Location } from '@angular/common';
 import { TimerComponent } from '../../shared/components/timer/timer.component';
 import { GameService } from '../../core/services/game.service';
 import { RoundDetailComponent } from '../../shared/components/round-detail/round-detail.component';
+import { GameStatsComponent } from '../../shared/components/game-stats/game-stats.component';
 
 @Component({
   selector: 'app-drawing-canvas',
-  standalone: true,
-  imports: [CommonModule, TimerComponent, RoundDetailComponent],
+  imports: [CommonModule, TimerComponent, RoundDetailComponent, GameStatsComponent],
   templateUrl: './solo.component.html',
   styleUrls: ['./solo.component.css']
 })
@@ -16,6 +16,7 @@ export class SoloComponent {
   private ctx!: CanvasRenderingContext2D;
   private drawing = false;
   private predictionTimeout: any;
+  private roundInProgress = true;
 
   public predictions: any[] = [];
   public isLoading = false;
@@ -27,6 +28,13 @@ export class SoloComponent {
   public currentWord = '';
   public showPrompt = true;
   public startTimer = false;
+  public showTimeUp = false;
+  public showGameStats = false;
+  public gameStats: any = {
+    totalRounds: 0,
+    correctGuesses: 0,
+    rounds: []
+  };
 
   constructor(private gameService: GameService, private location: Location) { }
 
@@ -44,30 +52,63 @@ export class SoloComponent {
       next: (res: any) => {
         this.wordsToDraw = res.rounds || [];
         this.totalRounds = this.wordsToDraw.length;
-        this.currentWord = this.wordsToDraw[0].word;
+        this.currentWord = this.wordsToDraw[0]?.word || '';
+        this.gameStats.totalRounds = this.totalRounds;
+        this.roundInProgress = true;
       }
     });
   }
 
   onGotIt() {
     this.showPrompt = false;
-    this.startTimer = true;
+    this.restartTimer();
   }
 
   onTimerComplete() {
-    // Timer finished — move to next round or end game
-    console.log("Timer done for round", this.currentRound);
+    if (!this.roundInProgress) return;
+    this.roundInProgress = false;
     this.startTimer = false;
+    this.showTimeUp = true;
+
+    this.recordRoundResult(false, true);
+
+    setTimeout(() => {
+      this.showTimeUp = false;
+      this.proceedToNextRound();
+    }, 2000);
+  }
+
+  private recordRoundResult(isCorrect: boolean, isTimeUp: boolean = false) {
+    const roundResult = {
+      round: this.currentRound,
+      word: this.currentWord,
+      isCorrect: isCorrect,
+      isTimeUp: isTimeUp,
+      prediction: this.predictions.length > 0 ? this.predictions[0].label : null
+    };
+
+    this.gameStats.rounds.push(roundResult);
+    if (isCorrect) {
+      this.gameStats.correctGuesses++;
+    }
+  }
+
+  private proceedToNextRound() {
     this.currentRound++;
 
     if (this.currentRound <= this.totalRounds) {
-      this.currentWord = this.wordsToDraw[this.currentRound - 1];
+      this.currentWord = this.wordsToDraw[this.currentRound - 1]?.word || '';
       this.showPrompt = true;
       this.clearCanvas();
       this.predictions = [];
+      this.roundInProgress = true;
+      // Stop the timer first, then restart it properly
+      this.startTimer = false;
+      setTimeout(() => {
+        this.restartTimer();
+      }, 100);
     } else {
-      alert("Game Over!");
-      this.quitGame();
+      this.showGameStats = true;
     }
   }
 
@@ -132,6 +173,10 @@ export class SoloComponent {
         const top = res.predictions?.[0];
         this.predictions = top ? [top] : [];
         this.isLoading = false;
+
+        if (top && top.confidence >= 0.75) {
+          this.checkIfCorrectPrediction(top.label);
+        }
       },
       error: err => {
         console.error('Prediction error:', err);
@@ -139,6 +184,20 @@ export class SoloComponent {
         this.isLoading = false;
       }
     });
+  }
+
+  private checkIfCorrectPrediction(predictedLabel: string) {
+    if (!this.roundInProgress) return;
+
+    if (predictedLabel.toLowerCase() === this.currentWord.toLowerCase()) {
+      this.roundInProgress = false;
+      this.recordRoundResult(true);
+      this.startTimer = false;
+
+      setTimeout(() => {
+        this.proceedToNextRound();
+      }, 1500);
+    }
   }
 
   private hasDrawing(): boolean {
@@ -149,6 +208,31 @@ export class SoloComponent {
       if (data[i] < 255 || data[i + 1] < 255 || data[i + 2] < 255) return true;
     }
     return false;
+  }
+
+  private restartTimer() {
+    this.startTimer = false;
+    setTimeout(() => {
+      this.startTimer = true;
+    }, 50);
+  }
+
+  onPlayAgain() {
+    this.currentRound = 1;
+    this.showGameStats = false;
+    this.showPrompt = true;
+    this.roundInProgress = true;
+    this.gameStats = {
+      totalRounds: 0,
+      correctGuesses: 0,
+      rounds: []
+    };
+    this.clearCanvas();
+    this.getWordsToDraw();
+  }
+
+  onQuitFromStats() {
+    this.location.back();
   }
 
   ngOnDestroy() {

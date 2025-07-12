@@ -1,4 +1,3 @@
-// timer.component.ts
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 
 @Component({
@@ -38,6 +37,7 @@ export class TimerComponent implements OnInit, OnDestroy {
 
   private intervalId: any;
   private startTime: number = 0;
+  private previousStartRound: boolean = false;
 
   // SVG circle properties
   radius: number = 90;
@@ -53,9 +53,15 @@ export class TimerComponent implements OnInit, OnDestroy {
   }
 
   ngOnChanges() {
-    if (this.startRound && !this.isRunning) {
+    // Check if startRound changed from false to true
+    if (this.startRound && !this.previousStartRound) {
       this.startTimer();
+    } else if (!this.startRound && this.previousStartRound) {
+      // If startRound becomes false, stop the timer
+      this.stopTimer();
     }
+
+    this.previousStartRound = this.startRound;
   }
 
   get strokeDashoffset(): number {
