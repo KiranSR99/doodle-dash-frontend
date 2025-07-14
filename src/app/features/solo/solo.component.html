@@ -31,7 +31,7 @@
             <div class="bg-gray-50 px-6 py-2 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600 font-medium">Round {{ currentRound }}/{{ totalRounds }}</span>
-                    <span class="text-gray-700 font-medium">Draw: {{ currentWord }}</span>
+                    <span class="text-gray-700 font-medium">Draw: {{ currentWord | titlecase}}</span>
                     <app-timer [startRound]="startTimer" (timerCompleted)="onTimerComplete()"></app-timer>
                 </div>
             </div>
@@ -57,12 +57,12 @@
                             </span>
                             <span
                                 *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() === currentWord.toLowerCase()">
-                                <span class="font-bold text-green-600 animate-pulse">🎉 Correct! {{ predictions[0].label
+                                <span class="font-bold text-green-600 animate-pulse">🎉 Correct! {{ predictions[0].label | titlecase
                                     }}</span>
                             </span>
                             <span
                                 *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() !== currentWord.toLowerCase()">
-                                It's a <span class="font-bold text-blue-600">{{ predictions[0].label }}</span>!
+                                It's a <span class="font-bold text-blue-600">{{ predictions[0].label | titlecase}}</span>!
                             </span>
                         </ng-container>
                         <ng-container *ngIf="!isLoading && predictions.length === 0">

@@ -1,18 +1,23 @@
+// lobby.component.ts
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { SocketService } from '../../../core/services/socket.service';
+import { PlayerService } from '../services/player.service';
+
 interface Player {
   name: string;
   id: string;
 }
+
 interface RoomData {
   creator: string;
   room_code: string;
   players: Player[];
   status: 'waiting' | 'ready';
 }
+
 @Component({
   selector: 'app-game-room',
   imports: [CommonModule],
@@ -31,17 +36,28 @@ export class LobbyComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private playerService: PlayerService
   ) { }
 
   ngOnInit() {
     this.roomCode = this.route.snapshot.params['roomCode'] || '';
+
+    // Get player name from service
+    this.currentPlayerName = this.playerService.getCurrentPlayerName();
+
+    // Subscribe to player name changes
+    this.subscriptions.push(
+      this.playerService.currentPlayerName$.subscribe(name => {
+        this.currentPlayerName = name;
+        console.log('[LOBBY] Player name updated:', name);
+      })
+    );
+
     this.checkConnection();
     this.setupEventListeners();
-
     this.socketService.getRoomData(this.roomCode);
   }
-
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
@@ -54,7 +70,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       }),
 
       this.socketService.onBothPlayersReady().subscribe(data => {
-        console.log('[GAME-ROOM] Both players ready:', data);
+        console.log('[LOBBY] Both players ready:', data);
         this.gameStatus = 'ready';
         this.updateRoomData(data);
       }),
@@ -64,18 +80,29 @@ export class LobbyComponent implements OnInit, OnDestroy {
       }),
 
       this.socketService.onPlayerDisconnected().subscribe(data => {
-        console.log('[GAME-ROOM] Player disconnected:', data);
+        console.log('[LOBBY] Player disconnected:', data);
         this.gameStatus = 'disconnected';
         this.updateRoomData(data);
       }),
 
       this.socketService.onPlayerLeft().subscribe(data => {
-        console.log('[GAME-ROOM] Player left:', data);
+        console.log('[LOBBY] Player left:', data);
         this.updateRoomData(data);
       }),
 
+      // this.socketService.onRoundStart().subscribe(data => {
+      //   this.router.navigate(['/multiplayer/game', this.roomCode],
+      //     {
+      //       state: { round: data.round, word: data.word }
+      //     });
+      // }),
+
+      this.socketService.onGameStart().subscribe(() => {
+        this.router.navigate(['/multiplayer/game', this.roomCode]);
+      }),
+
       this.socketService.onError().subscribe(error => {
-        console.error('[GAME-ROOM] Socket error:', error);
+        console.error('[LOBBY] Socket error:', error);
         alert(error.message || 'An error occurred');
 
         if (error.message?.includes('Room not found') || error.message?.includes('does not exist')) {
@@ -96,14 +123,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
       players: data.players || [],
       status: data.status || 'waiting'
     };
-    console.log('[GAME-ROOM] Room data updated:', this.roomData);
+    console.log('[LOBBY] Room data updated:', this.roomData);
   }
 
   private checkConnection(): void {
     this.isConnected = this.socketService.isConnected();
 
     if (!this.isConnected) {
-      console.log('[GAME-ROOM] Connection lost, attempting to reconnect...');
+      console.log('[LOBBY] Connection lost, attempting to reconnect...');
       this.socketService.reconnect();
     }
   }
@@ -116,10 +143,37 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   leaveRoom(): void {
     if (confirm('Are you sure you want to leave this room?')) {
-      console.log('[GAME-ROOM] Leaving room:', this.roomCode);
+      console.log('[LOBBY] Leaving room:', this.roomCode);
+
+      // Clear player name from service
+      this.playerService.clearPlayerName();
+
       this.socketService.leaveRoom(this.roomCode);
       this.router.navigate(['/']);
     }
   }
 
+  startGame(): void {
+    if (!this.roomData) {
+      alert('Room data not available!');
+      return;
+    }
+
+    // Check if current player is the creator using service
+    if (this.currentPlayerName !== this.roomData.creator) {
+      alert('Only the room creator can start the game!');
+      return;
+    }
+
+    if (this.roomData.players.length < 2) {
+      alert('Need at least 2 players to start the game!');
+      return;
+    }
+
+    this.socketService.startGame(this.roomCode);
+  }
+
+  isCreator(): boolean {
+    return this.currentPlayerName === this.roomData?.creator;
+  }
 }

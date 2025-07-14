@@ -1,8 +1,10 @@
+// room-entry.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SocketService } from '../../../core/services/socket.service';
+import { PlayerService } from '../services/player.service';
 
 @Component({
   selector: 'app-handle-room',
@@ -20,6 +22,7 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
 
   constructor(
     private socketService: SocketService,
+    private playerService: PlayerService,
     private router: Router
   ) { }
 
@@ -37,17 +40,21 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
       this.socketService.onRoomCreated().subscribe(data => {
         console.log('[SOCKET] Room created:', data);
         this.isCreatingRoom = false;
-        this.router.navigate(['/multiplayer/lobby', data.room_code], {
-          state: { playerName: this.username.trim() }
-        });
+        
+        // Set player name in service
+        this.playerService.setPlayerName(this.username.trim());
+        
+        this.router.navigate(['/multiplayer/lobby', data.room_code]);
       }),
 
       this.socketService.onRoomJoined().subscribe(data => {
         console.log('[SOCKET] Joined room:', data);
         this.isJoiningRoom = false;
-        this.router.navigate(['/multiplayer/lobby', data.room_code], {
-          state: { playerName: this.username.trim() }
-        });
+        
+        // Set player name in service
+        this.playerService.setPlayerName(this.username.trim());
+        
+        this.router.navigate(['/multiplayer/lobby', data.room_code]);
       }),
 
       this.socketService.onError().subscribe(err => {
@@ -55,18 +62,12 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
         this.isCreatingRoom = false;
         this.isJoiningRoom = false;
         alert(err.message || 'An error occurred');
-      }),
-
-      // this.socketService.onBothPlayersReady().subscribe(data => {
-      //   console.log('[SOCKET] Both players ready:', data);
-      //   // You can show UI updates or notify user here if needed
-      // })
+      })
     );
   }
 
   createRoom(): void {
     if (!this.validateUsername()) return;
-
     if (!this.checkConnection()) return;
 
     this.isCreatingRoom = true;
@@ -75,12 +76,10 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
 
   joinRoom(): void {
     if (!this.validateUsername()) return;
-
     if (!this.roomCode.trim()) {
       alert('Please enter a room code.');
       return;
     }
-
     if (!this.checkConnection()) return;
 
     this.isJoiningRoom = true;

@@ -12,14 +12,14 @@
 
         <div class="mb-6">
             <h3 class="text-lg font-semibold text-gray-700 mb-3">Round Details:</h3>
-            <div class="space-y-2 max-h-40 overflow-y-auto">
+            <div class="space-y-2">
                 <div *ngFor="let round of gameStats.rounds"
                     class="flex items-center justify-between p-2 rounded-lg border"
                     [class.bg-green-50]="round.isCorrect" [class.bg-red-50]="!round.isCorrect"
                     [class.border-green-200]="round.isCorrect" [class.border-red-200]="!round.isCorrect">
                     <div class="flex items-center space-x-2">
                         <span class="text-sm font-medium text-gray-600">Round {{ round.round }}:</span>
-                        <span class="text-sm font-semibold">{{ round.word }}</span>
+                        <span class="text-sm font-semibold">{{ round.word | titlecase }}</span>
                     </div>
                     <div class="flex items-center space-x-2">
                         <span *ngIf="round.isCorrect" class="text-green-600 text-sm">✓ Correct</span>

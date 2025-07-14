@@ -24,9 +24,17 @@ export class SocketService {
     this.socket.emit('join_room', { name, room_code });
   }
 
+  startGame(room_code: string) {
+    this.socket.emit('start_game', { room_code });
+  }
+
+  nextRound(room_code: string) {
+    this.socket.emit('next_round', { room_code });
+  }
+
   getRoomData(roomCode: string) {
-  this.socket.emit('get_room_data', { room_code: roomCode });
-}
+    this.socket.emit('get_room_data', { room_code: roomCode });
+  }
 
   leaveRoom(room_code: string) {
     console.log('[SOCKET] Leaving room:', room_code);
@@ -46,13 +54,21 @@ export class SocketService {
   }
 
   onRoomData(): Observable<any> {
-  return new Observable(observer => {
-    this.socket.on('room_data', (data) => {
-      console.log('[SOCKET] Room data received:', data);
-      observer.next(data);
+    return new Observable(observer => {
+      this.socket.on('room_data', (data) => {
+        console.log('[SOCKET] Room data received:', data);
+        observer.next(data);
+      });
     });
-  });
-}
+  }
+
+  onGameStart(): Observable<any> {
+    return this.listenToSocketEvent('game_started');
+  }
+
+  onRoundStart(): Observable<any> {
+    return this.listenToSocketEvent('start_round');
+  }
 
   onError(): Observable<any> {
     return this.listenToSocketEvent('error');

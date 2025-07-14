@@ -1,1 +1,9 @@
-<p>game works!</p>
+<div class="text-center mt-10">
+    <h2 class="text-xl font-semibold text-gray-800">Round {{ round }}</h2>
+    <p class="text-3xl font-bold text-indigo-600 mt-4">{{ currentWord }}</p>
+
+    <button class="mt-6 px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
+        (click)="goToNextRound()">
+        Next Round
+    </button>
+</div>
