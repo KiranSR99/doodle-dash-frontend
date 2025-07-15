@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { SocketService } from '../../../core/services/socket.service';
 import { PlayerService } from '../services/player.service';
+import { GameStartCountdownComponent } from '../../../shared/components/game-start-countdown/game-start-countdown.component';
 
 interface Player {
   name: string;
@@ -20,7 +21,7 @@ interface RoomData {
 
 @Component({
   selector: 'app-game-room',
-  imports: [CommonModule],
+  imports: [CommonModule, GameStartCountdownComponent],
   templateUrl: './lobby.component.html',
   styleUrl: './lobby.component.css'
 })
@@ -30,6 +31,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   roomData: RoomData | null = null;
   gameStatus: 'waiting' | 'ready' | 'disconnected' = 'waiting';
   isConnected: boolean = true;
+  gameStartingCountdown: boolean = false;
 
   private subscriptions: Subscription[] = [];
 
@@ -98,7 +100,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
       // }),
 
       this.socketService.onGameStart().subscribe(() => {
-        this.router.navigate(['/multiplayer/game', this.roomCode]);
+        this.gameStartingCountdown = true;
+        setTimeout(() => {
+          this.gameStartingCountdown = false;
+          this.router.navigate(['/multiplayer/game', this.roomCode]);
+        }, 3000);
       }),
 
       this.socketService.onError().subscribe(error => {

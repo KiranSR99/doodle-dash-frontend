@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SocketService } from '../../../core/services/socket.service';
+import { TimerComponent } from '../../../shared/components/timer/timer.component';
 
 @Component({
   selector: 'app-game',
-  imports: [],
+  imports: [TimerComponent],
   templateUrl: './game.component.html',
   styleUrl: './game.component.css'
 })
@@ -17,15 +18,7 @@ export class GameComponent {
     private router: Router,
     private socketService: SocketService,
     private activatedRoute: ActivatedRoute
-  ) {
-    // const nav = this.router.getCurrentNavigation();
-    // const state = nav?.extras?.state as { round: number, word: string };
-
-    // if (state?.word) {
-    //   this.currentWord = state.word;
-    //   this.round = state.round;
-    // }
-  }
+  ) { }
 
   ngOnInit() {
     this.roomCode = this.activatedRoute.snapshot.params['roomCode'] || '';

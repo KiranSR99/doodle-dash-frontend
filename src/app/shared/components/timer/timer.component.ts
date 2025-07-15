@@ -5,7 +5,7 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angu
   imports: [],
   template: `
     <div class="flex flex-col items-center gap-5 font-sans">
-    <div class="relative w-10 h-10">
+    <div class="relative w-9 h-9">
         <svg width="80" height="80" viewBox="0 0 200 200" class="w-full h-full">
             <!-- Background circle -->
             <circle cx="100" cy="100" [attr.r]="radius" fill="none" stroke="#f0f0f0" stroke-width="10" />

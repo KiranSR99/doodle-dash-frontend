@@ -87,3 +87,7 @@
         </div>
     </div>
 </div>
+
+@if(gameStartingCountdown) {
+<app-game-start-countdown (countdownFinished)="gameStartingCountdown = false"></app-game-start-countdown>
+}

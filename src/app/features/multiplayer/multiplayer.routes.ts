@@ -1,4 +1,5 @@
 import { Routes } from "@angular/router";
+import { GameComponent } from "./game/game.component";
 
 export const MULTIPLAYER_ROUTES: Routes = [
     {
@@ -12,5 +13,9 @@ export const MULTIPLAYER_ROUTES: Routes = [
     {
         path: 'game/:roomCode',
         loadComponent: () => import('./game/game.component').then(m => m.GameComponent)
+    },
+    {
+        path: 'game',
+        component: GameComponent
     }
 ];
