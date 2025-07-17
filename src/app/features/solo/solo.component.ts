@@ -17,11 +17,9 @@ export class SoloComponent {
   private drawing = false;
   private predictionTimeout: any;
   private roundInProgress = true;
-
   public predictions: any[] = [];
   public isLoading = false;
   public lastPredictionTime = 0;
-
   public wordsToDraw: any[] = [];
   public currentRound = 1;
   public totalRounds = 5;

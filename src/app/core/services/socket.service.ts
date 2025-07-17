@@ -36,6 +36,10 @@ export class SocketService {
     this.socket.emit('get_room_data', { room_code: roomCode });
   }
 
+  submitScore(room_code: string, score: number) {
+    this.socket.emit('submit_score', { room_code, score });
+  }
+
   leaveRoom(room_code: string) {
     console.log('[SOCKET] Leaving room:', room_code);
     this.socket.emit('leave_room', { room_code });
@@ -68,6 +72,14 @@ export class SocketService {
 
   onRoundStart(): Observable<any> {
     return this.listenToSocketEvent('start_round');
+  }
+
+  onPlayerProgress(): Observable<any> {
+    return this.listenToSocketEvent('player_progress');
+  }
+
+  onGameOver(): Observable<any> {
+    return this.listenToSocketEvent('game_over');
   }
 
   onError(): Observable<any> {

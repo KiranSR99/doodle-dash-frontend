@@ -1,113 +1,136 @@
-<div class="max-h-screen overflow-y-hidden bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white border-b border-b-gray-400 px-6 py-3">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-800">Doodle Dash</h1>
-            <button class="bg-gray-600 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-md transition-colors">
-                Quit Game
-            </button>
-        </div>
-    </header>
+@if(showPrompt) {
+<app-round-detail [round]="currentRound" [totalRounds]="totalRounds" [word]="currentWord"
+    (gotIt)="onGotIt()"></app-round-detail>
+}
 
-    <div class="flex">
-        <!-- Main Game Area -->
-        <div class="flex-1 p-4">
-            <!-- Game Info Header -->
-            <div class="bg-white rounded-t-lg border border-gray-400 p-2">
+<!-- Time's Up Message -->
+@if(showTimeUp) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="text-center">
+        <h2 class="text-2xl font-bold mb-2 text-green-500">Time's Up!</h2>
+        <p class="text-lg text-green-500">Moving to next round...</p>
+    </div>
+</div>
+}
+
+@if(showGameStats) {
+<app-game-stats *ngIf="showGameStats" [gameStats]="gameStats" (playAgain)="onPlayAgain()" (quit)="onQuitFromStats()">
+</app-game-stats>
+}
+
+
+<div class="min-h-screen p-4 max-w-7xl mx-auto">
+
+    <!-- Header with Quit Button -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Doodle Dash</h1>
+        <button (click)="quitGame()" class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded-sm">
+            Quit Game
+        </button>
+    </div>
+
+    <div class="flex gap-2">
+
+        <!-- Canvas Box -->
+        <div class="bg-white rounded-md overflow-hidden border border-gray-200 min-w-4xl">
+            <!-- Canvas Header with Round, Word, and Timer -->
+            <div class="bg-gray-50 px-6 py-2 border-b border-gray-200">
                 <div class="flex items-center justify-between">
-                    <span class="text-gray-600 font-medium">Round 2/5</span>
-                    <span class="text-gray-600 font-medium">Draw: Hand</span>
-                    <app-timer class="text-gray-600 font-medium"></app-timer>
+                    <span class="text-gray-600 font-medium">Round {{ currentRound }}/{{ totalRounds }}</span>
+                    <span class="text-gray-700 font-medium">Draw: {{ currentWord | titlecase}}</span>
+                    <app-timer [startRound]="startTimer" (timerCompleted)="onTimerComplete()"></app-timer>
                 </div>
             </div>
 
-            <!-- Drawing Canvas -->
-            <div class="bg-white rounded-b-lg border-r border-l border-b border-gray-400 p-4">
+            <!-- Canvas Drawing Area -->
+            <div class="p-6">
                 <div class="bg-white">
-                    <canvas #canvas height="450" width="600"
-                        class="mx-auto rounded-md cursor-crosshair border border-gray-400"></canvas>
+                    <canvas #canvas class="mx-auto rounded-md cursor-crosshair border border-gray-400"
+                        (mousedown)="startDrawing($event)" (mouseup)="stopDrawing()" (mouseleave)="stopDrawing()"
+                        (mousemove)="draw($event)">
+                    </canvas>
                 </div>
-                <div class="flex justify-between items-center mt-4">
-                    <div class="text-gray-400">Start drawing...</div>
-                    <button
-                        class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-md transition-colors">
+
+                <!-- Prediction + Clear Button -->
+                <div class="flex justify-between mt-2 w-[600px] mx-auto">
+                    <div class="text-center text-lg font-semibold text-gray-700">
+                        <ng-container *ngIf="isLoading">
+                            <span class="animate-pulse">Guessing...</span>
+                        </ng-container>
+                        <ng-container *ngIf="!isLoading && predictions.length > 0">
+                            <span *ngIf="predictions[0].confidence < 0.75">
+                                Is it <span class="font-bold">{{ predictions[0].label }}</span>?
+                            </span>
+                            <span
+                                *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() === currentWord.toLowerCase()">
+                                <span class="font-bold text-green-600 animate-pulse">🎉 Correct! {{ predictions[0].label
+                                    | titlecase
+                                    }}</span>
+                            </span>
+                            <span
+                                *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() !== currentWord.toLowerCase()">
+                                It's a <span class="font-bold text-blue-600">{{ predictions[0].label |
+                                    titlecase}}</span>!
+                            </span>
+                        </ng-container>
+                        <ng-container *ngIf="!isLoading && predictions.length === 0">
+                            <span class="text-gray-400">Start drawing...</span>
+                        </ng-container>
+                    </div>
+                    <button (click)="clearCanvas()" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-sm">
                         Clear Canvas
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Multiplayer Side Panel -->
-        <div class="w-80 bg-white border-l border-gray-200 p-6 space-y-6">
-            <!-- Match Info -->
-            <div class="text-center">
-                <span class="text-lg font-semibold text-gray-800">1 v 1 Match</span>
-            </div>
-
-            <!-- Players Score Comparison -->
-            <div class="space-y-4">
-                <!-- You -->
-                <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center space-x-2">
-                            <div
-                                class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                Y
-                            </div>
-                            <span class="font-medium text-gray-800">You</span>
+        <div class="max-h-screen w-full border border-gray-200 rounded-md p-2">
+            <div class="bg-blue-50 rounded-md p-3 border border-blue-200 mb-2">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <div
+                            class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            Y
                         </div>
-                        <div class="flex items-center space-x-1">
-                            <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
-                                </path>
-                            </svg>
-                            <span class="font-bold text-gray-800">850</span>
-                        </div>
+                        <span class="font-medium text-gray-800">{{'Player (You)'}}</span>
                     </div>
-                    <div class="flex space-x-1">
-                        <div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <span class="text-white text-xs">✓</span>
-                        </div>
-                        <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
-                        <div class="w-4 h-4 bg-gray-200 rounded-full"></div>
-                        <div class="w-4 h-4 bg-gray-200 rounded-full"></div>
-                        <div class="w-4 h-4 bg-gray-200 rounded-full"></div>
+                    <div class="flex items-center space-x-1">
+                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
+                            </path>
+                        </svg>
+                        <span class="font-bold text-xl text-gray-800">850</span>
                     </div>
                 </div>
+                <div class="flex justify-end">
+                    <p class="text-sm text-gray-400">Game in progress...</p>
+                </div>
+            </div>
 
-                <!-- Opponent -->
-                <div class="bg-red-50 rounded-lg p-4 border-2 border-red-200">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center space-x-2">
-                            <div
-                                class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                O
-                            </div>
-                            <span class="font-medium text-gray-800">Opponent</span>
+            <div class="bg-red-50 rounded-md p-3 border border-red-200">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <div
+                            class="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            O
                         </div>
-                        <div class="flex items-center space-x-1">
-                            <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
-                                </path>
-                            </svg>
-                            <span class="font-bold text-gray-800">720</span>
-                        </div>
+                        <span class="font-medium text-gray-800">{{'Friend'}}</span>
                     </div>
-                    <div class="flex space-x-1">
-                        <div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <span class="text-white text-xs">✓</span>
-                        </div>
-                        <div class="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                            <span class="text-white text-xs">✗</span>
-                        </div>
-                        <div class="w-4 h-4 bg-gray-200 rounded-full"></div>
-                        <div class="w-4 h-4 bg-gray-200 rounded-full"></div>
-                        <div class="w-4 h-4 bg-gray-200 rounded-full"></div>
+                    <div class="flex items-center space-x-1">
+                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
+                            </path>
+                        </svg>
+                        <span class="font-bold text-xl text-gray-800">790</span>
                     </div>
+                </div>
+                <div class="flex justify-end">
+                    <p class="text-sm text-gray-400">Game Completed</p>
                 </div>
             </div>
         </div>
+
     </div>
 </div>

@@ -3,12 +3,14 @@
     (gotIt)="onGotIt()"></app-round-detail>
 
 <!-- Time's Up Message -->
-<div *ngIf="showTimeUp" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-red-500 text-white px-8 py-6 rounded-lg shadow-2xl text-center">
-        <h2 class="text-2xl font-bold mb-2">⏰ Time's Up!</h2>
-        <p class="text-lg">Moving to next round...</p>
+@if(showTimeUp) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="text-center">
+        <h2 class="text-2xl font-bold mb-2 text-green-500">Time's Up!</h2>
+        <p class="text-lg text-green-500">Moving to next round...</p>
     </div>
 </div>
+}
 
 <!-- Game Stats Modal -->
 <app-game-stats *ngIf="showGameStats" [gameStats]="gameStats" (playAgain)="onPlayAgain()" (quit)="onQuitFromStats()">
@@ -57,12 +59,14 @@
                             </span>
                             <span
                                 *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() === currentWord.toLowerCase()">
-                                <span class="font-bold text-green-600 animate-pulse">🎉 Correct! {{ predictions[0].label | titlecase
+                                <span class="font-bold text-green-600 animate-pulse">🎉 Correct! {{ predictions[0].label
+                                    | titlecase
                                     }}</span>
                             </span>
                             <span
                                 *ngIf="predictions[0].confidence >= 0.75 && predictions[0].label.toLowerCase() !== currentWord.toLowerCase()">
-                                It's a <span class="font-bold text-blue-600">{{ predictions[0].label | titlecase}}</span>!
+                                It's a <span class="font-bold text-blue-600">{{ predictions[0].label |
+                                    titlecase}}</span>!
                             </span>
                         </ng-container>
                         <ng-container *ngIf="!isLoading && predictions.length === 0">
