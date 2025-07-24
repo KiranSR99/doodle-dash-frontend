@@ -6,6 +6,7 @@ import { CommonModule, Location } from '@angular/common';
 import { RoundDetailComponent } from '../../../shared/components/round-detail/round-detail.component';
 import { GameStatsComponent } from '../../../shared/components/game-stats/game-stats.component';
 import { GameService } from '../../../core/services/game.service';
+import { ScoreService } from '../../../core/services/score.service';
 
 @Component({
   selector: 'app-game',
@@ -22,6 +23,8 @@ export class GameComponent {
   private drawing: boolean = false;
   private predictionTimeout: any;
   private roundInProgress: boolean = true;
+  private roundStartTime: number = 0;
+
   public predictions: any[] = [];
   public isLoading = false;
   public lastPredictionTime = 0;
@@ -33,6 +36,19 @@ export class GameComponent {
   public startTimer: boolean = false;
   public showTimeUp: boolean = false;
   public showGameStats: boolean = false;
+  public playerScore: number = 0;
+
+  // Player tracking variables
+  public currentPlayerName: string = '';
+  public opponentName: string = '';
+  public opponentScore: number = 0;
+  public currentPlayerId: string = '';
+  public opponentId: string = '';
+  public currentPlayerRound: number = 0;
+  public opponentRound: number = 0;
+  public currentPlayerStatus: string = 'Game in progress...';
+  public opponentStatus: string = 'Game in progress...';
+
   public gameStats: any = {
     totalRounds: 0,
     correctGuesses: 0,
@@ -44,24 +60,104 @@ export class GameComponent {
     private socketService: SocketService,
     private activatedRoute: ActivatedRoute,
     private location: Location,
-    private gameService: GameService
+    private gameService: GameService,
+    private scoreService: ScoreService
   ) { }
 
   ngOnInit() {
     this.roomCode = this.activatedRoute.snapshot.params['roomCode'] || '';
 
-    this.socketService.onRoundStart().subscribe(data => {
-      this.currentWord = data.word;
-      this.round = data.round;
-    });
+    // Get room data to initialize player names
+    this.socketService.getRoomData(this.roomCode);
 
-    this.socketService.nextRound(this.roomCode);
+    this.setupSocketListeners();
 
     const canvas = this.canvasRef.nativeElement;
     canvas.width = 600;
     canvas.height = 450;
     this.ctx = canvas.getContext('2d')!;
     this.clearCanvas();
+  }
+
+  private setupSocketListeners() {
+    // Listen for room data to get player names
+    this.socketService.onRoomData().subscribe(data => {
+      console.log('[SOCKET] Room data received:', data);
+      this.initializePlayerData(data);
+    });
+
+    // Listen for round start
+    this.socketService.onRoundStart().subscribe(data => {
+      this.currentWord = data.word;
+      this.round = data.round;
+      this.currentRound = data.round;
+    });
+
+    // Listen for player progress updates
+    this.socketService.onPlayerProgress().subscribe(data => {
+      console.log('[SOCKET] Player progress updated:', data);
+      this.updatePlayerProgress(data);
+    });
+
+    // Listen for game over
+    this.socketService.onGameOver().subscribe(data => {
+      console.log('[SOCKET] Game over:', data);
+      this.handleGameOver(data);
+    });
+
+    // Start the first round
+    this.socketService.nextRound(this.roomCode);
+  }
+
+  private initializePlayerData(roomData: any) {
+    if (roomData && roomData.players && roomData.players.length >= 2) {
+      // Assuming the current player is the first one (you might need to adjust this logic)
+      // You should store the current player's socket ID when joining the room
+      this.currentPlayerName = roomData.players[0].name;
+      this.opponentName = roomData.players[1].name;
+      this.currentPlayerId = roomData.players[0].id;
+      this.opponentId = roomData.players[1].id;
+    }
+  }
+
+  private updatePlayerProgress(progressData: any) {
+    const { player_id, player_name, round, total_rounds, score } = progressData;
+
+    if (player_id === this.currentPlayerId) {
+      // Update current player's progress
+      this.playerScore = score;
+      this.currentPlayerRound = round;
+      this.currentPlayerStatus = round >= total_rounds ? 'Game Completed' : 'Game in progress...';
+    } else {
+      // Update opponent's progress
+      this.opponentScore = score;
+      this.opponentRound = round;
+      this.opponentStatus = round >= total_rounds ? 'Game Completed' : 'Game in progress...';
+
+      // Update opponent name if not set
+      if (!this.opponentName && player_name) {
+        this.opponentName = player_name;
+      }
+    }
+  }
+
+  private handleGameOver(gameOverData: any) {
+    if (gameOverData && gameOverData.final_scores) {
+      // Update final scores
+      const finalScores = gameOverData.final_scores;
+
+      if (finalScores[this.currentPlayerId]) {
+        this.playerScore = finalScores[this.currentPlayerId].score;
+        this.currentPlayerStatus = 'Game Completed';
+      }
+
+      if (finalScores[this.opponentId]) {
+        this.opponentScore = finalScores[this.opponentId].score;
+        this.opponentStatus = 'Game Completed';
+      }
+    }
+
+    this.showGameStats = true;
   }
 
   clearCanvas() {
@@ -99,25 +195,6 @@ export class GameComponent {
     this.ctx.moveTo(x, y);
 
     this.schedulePrediction(200);
-  }
-
-  private proceedToNextRound() {
-    this.currentRound++;
-
-    if (this.currentRound <= this.totalRounds) {
-      this.socketService.nextRound(this.roomCode);
-      this.showPrompt = true;
-      this.clearCanvas();
-      this.predictions = [];
-      this.roundInProgress = true;
-      // Stop the timer first, then restart it properly
-      this.startTimer = false;
-      setTimeout(() => {
-        this.restartTimer();
-      }, 100);
-    } else {
-      this.showGameStats = true;
-    }
   }
 
   private schedulePrediction(delay: number = 500) {
@@ -174,24 +251,48 @@ export class GameComponent {
       this.roundInProgress = false;
       this.startTimer = false;
 
+      const timeTakenSec = (Date.now() - this.roundStartTime) / 1000;
+      const score = this.scoreService.calculateScore(timeTakenSec);
+
+      this.playerScore += score;
+      this.socketService.submitScore(this.roomCode, score);
+
+      this.gameStats.rounds.push({
+        word: this.currentWord,
+        correct: true,
+        timeTaken: Math.round(timeTakenSec),
+        score: score
+      });
+      this.gameStats.correctGuesses++;
+      this.gameStats.totalRounds++;
+
       setTimeout(() => {
         this.proceedToNextRound();
       }, 1500);
     }
   }
 
-  goToNextRound(): void {
-    this.socketService.nextRound(this.roomCode);
-  }
+  private proceedToNextRound() {
+    this.currentRound++;
 
-  quitGame() {
-    if (confirm('Are you sure you want to quit the game?')) {
-      this.location.back();
+    if (this.currentRound <= this.totalRounds) {
+      this.socketService.nextRound(this.roomCode);
+      this.showPrompt = true;
+      this.clearCanvas();
+      this.predictions = [];
+      this.roundInProgress = true;
+      this.startTimer = false;
+      setTimeout(() => {
+        this.restartTimer();
+      }, 100);
+    } else {
+      this.showGameStats = true;
     }
   }
 
   onGotIt() {
     this.showPrompt = false;
+    this.roundStartTime = Date.now();
     this.restartTimer();
   }
 
@@ -208,14 +309,38 @@ export class GameComponent {
     this.startTimer = false;
     this.showTimeUp = true;
 
+    this.gameStats.rounds.push({
+      word: this.currentWord,
+      correct: false,
+      timeTaken: this.scoreService.maxTime,
+      score: 0
+    });
+    this.gameStats.totalRounds++;
+
     setTimeout(() => {
       this.showTimeUp = false;
       this.proceedToNextRound();
     }, 2000);
   }
 
+  goToNextRound(): void {
+    this.socketService.nextRound(this.roomCode);
+  }
+
+  quitGame() {
+    if (confirm('Are you sure you want to quit the game?')) {
+      this.location.back();
+    }
+  }
+
   onPlayAgain() {
     this.currentRound = 1;
+    this.playerScore = 0;
+    this.opponentScore = 0;
+    this.currentPlayerRound = 0;
+    this.opponentRound = 0;
+    this.currentPlayerStatus = 'Game in progress...';
+    this.opponentStatus = 'Game in progress...';
     this.showGameStats = false;
     this.showPrompt = true;
     this.roundInProgress = true;
@@ -230,5 +355,4 @@ export class GameComponent {
   onQuitFromStats() {
     this.location.back();
   }
-
 }
