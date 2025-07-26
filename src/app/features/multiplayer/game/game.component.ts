@@ -40,17 +40,15 @@ export class GameComponent {
   public playerScore: number = 0;
 
   // Player tracking variables
-  public currentPlayerName: string = '';
+  public myName: string = '';
   public opponentName: string = '';
   public opponentScore: number = 0;
-  public currentPlayerId: string = '';
+  public myId: string = '';
   public opponentId: string = '';
   public currentPlayerRound: number = 0;
   public opponentRound: number = 0;
   public currentPlayerStatus: string = 'Game in progress...';
   public opponentStatus: string = 'Game in progress...';
-
-  myName: string = '';
 
   public gameStats: any = {
     totalRounds: 0,
@@ -115,55 +113,63 @@ export class GameComponent {
   }
 
   private initializePlayerData(roomData: any) {
-    if (roomData && roomData.players && roomData.players.length >= 2) {
-      // Assuming the current player is the first one (you might need to adjust this logic)
-      // You should store the current player's socket ID when joining the room
-      this.currentPlayerName = roomData.players[0].name;
-      this.opponentName = roomData.players[1].name;
-      this.currentPlayerId = roomData.players[0].id;
-      this.opponentId = roomData.players[1].id;
+    if (!roomData || !roomData.players || roomData.players.length < 2) return;
+
+    const selfName = this.myName;
+
+    // Find current and opponent player based on name
+    const currentPlayer = roomData.players.find((p: any) => p.name === selfName);
+    const opponentPlayer = roomData.players.find((p: any) => p.name !== selfName);
+
+    if (currentPlayer && opponentPlayer) {
+      this.myId = currentPlayer.id;
+      this.opponentId = opponentPlayer.id;
+      this.opponentName = opponentPlayer.name;
+    } else {
+      console.warn('[INIT] Could not match players properly.');
     }
   }
+
 
   private updatePlayerProgress(progressData: any) {
     const { player_id, player_name, round, total_rounds, score } = progressData;
 
-    if (player_id === this.currentPlayerId) {
-      // Update current player's progress
+    if (player_id === this.myId) {
+      // Update own progress
       this.playerScore = score;
       this.currentPlayerRound = round;
       this.currentPlayerStatus = round >= total_rounds ? 'Game Completed' : 'Game in progress...';
-    } else {
+    } else if (player_id === this.opponentId) {
       // Update opponent's progress
       this.opponentScore = score;
       this.opponentRound = round;
       this.opponentStatus = round >= total_rounds ? 'Game Completed' : 'Game in progress...';
 
-      // Update opponent name if not set
       if (!this.opponentName && player_name) {
         this.opponentName = player_name;
       }
     }
   }
 
+
   private handleGameOver(gameOverData: any) {
-    if (gameOverData && gameOverData.final_scores) {
-      // Update final scores
-      const finalScores = gameOverData.final_scores;
+    if (!gameOverData || !gameOverData.final_scores) return;
 
-      if (finalScores[this.currentPlayerId]) {
-        this.playerScore = finalScores[this.currentPlayerId].score;
-        this.currentPlayerStatus = 'Game Completed';
-      }
+    const finalScores = gameOverData.final_scores;
 
-      if (finalScores[this.opponentId]) {
-        this.opponentScore = finalScores[this.opponentId].score;
-        this.opponentStatus = 'Game Completed';
-      }
+    if (this.myId in finalScores) {
+      this.playerScore = finalScores[this.myId].score;
+      this.currentPlayerStatus = 'Game Completed';
+    }
+
+    if (this.opponentId in finalScores) {
+      this.opponentScore = finalScores[this.opponentId].score;
+      this.opponentStatus = 'Game Completed';
     }
 
     this.showGameStats = true;
   }
+
 
   clearCanvas() {
     const canvas = this.canvasRef.nativeElement;
