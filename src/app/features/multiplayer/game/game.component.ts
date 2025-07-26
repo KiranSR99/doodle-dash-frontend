@@ -7,6 +7,7 @@ import { RoundDetailComponent } from '../../../shared/components/round-detail/ro
 import { GameStatsComponent } from '../../../shared/components/game-stats/game-stats.component';
 import { GameService } from '../../../core/services/game.service';
 import { ScoreService } from '../../../core/services/score.service';
+import { PlayerService } from '../services/player.service';
 
 @Component({
   selector: 'app-game',
@@ -49,6 +50,8 @@ export class GameComponent {
   public currentPlayerStatus: string = 'Game in progress...';
   public opponentStatus: string = 'Game in progress...';
 
+  myName: string = '';
+
   public gameStats: any = {
     totalRounds: 0,
     correctGuesses: 0,
@@ -61,11 +64,13 @@ export class GameComponent {
     private activatedRoute: ActivatedRoute,
     private location: Location,
     private gameService: GameService,
-    private scoreService: ScoreService
+    private scoreService: ScoreService,
+    private playerService: PlayerService
   ) { }
 
   ngOnInit() {
     this.roomCode = this.activatedRoute.snapshot.params['roomCode'] || '';
+    this.myName = this.playerService.getCurrentPlayerName();
 
     // Get room data to initialize player names
     this.socketService.getRoomData(this.roomCode);

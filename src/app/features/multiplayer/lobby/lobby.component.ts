@@ -1,4 +1,3 @@
-// lobby.component.ts
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -91,13 +90,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         console.log('[LOBBY] Player left:', data);
         this.updateRoomData(data);
       }),
-
-      // this.socketService.onRoundStart().subscribe(data => {
-      //   this.router.navigate(['/multiplayer/game', this.roomCode],
-      //     {
-      //       state: { round: data.round, word: data.word }
-      //     });
-      // }),
 
       this.socketService.onGameStart().subscribe(() => {
         this.gameStartingCountdown = true;
