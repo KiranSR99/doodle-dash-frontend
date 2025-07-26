@@ -94,7 +94,12 @@ export class GameComponent {
       this.currentWord = data.word;
       this.round = data.round;
       this.currentRound = data.round;
+
+      if (this.myId) {
+        this.currentPlayerRound = data.round;
+      }
     });
+
 
     // Listen for player progress updates
     this.socketService.onPlayerProgress().subscribe(data => {
@@ -328,11 +333,15 @@ export class GameComponent {
     });
     this.gameStats.totalRounds++;
 
+    // ✅ Manually update round (optional visual fix if needed)
+    this.currentPlayerRound = this.currentRound;
+
     setTimeout(() => {
       this.showTimeUp = false;
       this.proceedToNextRound();
     }, 2000);
   }
+
 
   goToNextRound(): void {
     this.socketService.nextRound(this.roomCode);
