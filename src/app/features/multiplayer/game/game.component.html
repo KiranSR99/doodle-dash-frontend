@@ -13,9 +13,10 @@
 </div>
 }
 
-@if(showGameStats) {
-<app-game-stats *ngIf="showGameStats" [gameStats]="gameStats" (playAgain)="onPlayAgain()" (quit)="onQuitFromStats()">
-</app-game-stats>
+@if(showGameResults) {
+<app-game-results [player1]="player1Data" [player2]="player2Data" [totalRounds]="totalRounds"
+    (playAgain)="onPlayAgainFromResults()" (quit)="onQuitFromResults()">
+</app-game-results>
 }
 
 <div class="min-h-screen p-4 max-w-7xl mx-auto">
@@ -103,10 +104,10 @@
                         <span class="font-bold text-xl text-gray-800">{{ playerScore }}</span>
                     </div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <div class="text-xs text-gray-500">
+                <div class="flex justify-end items-center">
+                    <!-- <div class="text-xs text-gray-500">
                         Round: {{ currentPlayerRound }}/{{ totalRounds }}
-                    </div>
+                    </div> -->
                     <p class="text-sm text-gray-400">{{ currentPlayerStatus }}</p>
                 </div>
             </div>
@@ -130,10 +131,10 @@
                         <span class="font-bold text-xl text-gray-800">{{ opponentScore }}</span>
                     </div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <div class="text-xs text-gray-500">
+                <div class="flex justify-end items-center">
+                    <!-- <div class="text-xs text-gray-500">
                         Round: {{ opponentRound }}/{{ totalRounds }}
-                    </div>
+                    </div> -->
                     <p class="text-sm text-gray-400">{{ opponentStatus }}</p>
                 </div>
             </div>
