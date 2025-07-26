@@ -4,7 +4,6 @@ import { SocketService } from '../../../core/services/socket.service';
 import { TimerComponent } from '../../../shared/components/timer/timer.component';
 import { CommonModule, Location } from '@angular/common';
 import { RoundDetailComponent } from '../../../shared/components/round-detail/round-detail.component';
-import { GameStatsComponent } from '../../../shared/components/game-stats/game-stats.component';
 import { GameService } from '../../../core/services/game.service';
 import { ScoreService } from '../../../core/services/score.service';
 import { PlayerService } from '../services/player.service';
@@ -213,7 +212,7 @@ export class GameComponent {
       if (opponentRoundsData.length === 0) {
         // Create placeholder rounds if we don't have opponent data
         opponentRoundsData = Array.from({ length: this.totalRounds }, (_, i) => ({
-          word: 'Unknown',
+          word: this.gameStats.rounds[i]?.word || 'Unknown',
           correct: false,
           timeTaken: this.scoreService.maxTime,
           score: Math.round(finalScores[this.opponentId].score / this.totalRounds) // Estimate score per round
@@ -229,6 +228,35 @@ export class GameComponent {
     }
 
     // Show multiplayer results instead of single player stats
+    this.showGameResults = true;
+    this.showGameStats = false;
+  }
+
+  // Add this method to handle local game over if server doesn't respond
+  private triggerLocalGameOver() {
+    console.log('[GAME] Triggering local game over...');
+
+    // Create local game over data
+    this.player1Data = {
+      id: this.myId,
+      name: this.myName,
+      score: this.playerScore,
+      rounds: [...this.gameStats.rounds]
+    };
+
+    this.player2Data = {
+      id: this.opponentId,
+      name: this.opponentName,
+      score: this.opponentScore,
+      rounds: this.opponentRounds.length > 0 ? this.opponentRounds :
+        Array.from({ length: this.totalRounds }, (_, i) => ({
+          word: this.gameStats.rounds[i]?.word || 'Unknown',
+          correct: false,
+          timeTaken: this.scoreService.maxTime,
+          score: Math.round(this.opponentScore / this.totalRounds)
+        }))
+    };
+
     this.showGameResults = true;
     this.showGameStats = false;
   }
@@ -346,22 +374,29 @@ export class GameComponent {
   }
 
   private proceedToNextRound() {
-    this.currentRound++;
-
-    if (this.currentRound <= this.totalRounds) {
-      this.socketService.nextRound(this.roomCode);
-      this.showPrompt = true;
-      this.clearCanvas();
-      this.predictions = [];
-      this.roundInProgress = true;
-      this.startTimer = false;
+    // Check if game should end before incrementing
+    if (this.currentRound >= this.totalRounds) {
+      // Game completed - wait for game over from server or show results immediately
+      console.log('[GAME] All rounds completed, waiting for game over...');
+      // If server doesn't send game over, trigger it manually after a delay
       setTimeout(() => {
-        this.restartTimer();
-      }, 100);
-    } else {
-      // Game completed - wait for game over from server
-      // this.showGameResults = true; // This will be handled by handleGameOver
+        if (!this.showGameResults && !this.showGameStats) {
+          this.triggerLocalGameOver();
+        }
+      }, 3000);
+      return;
     }
+
+    this.currentRound++;
+    this.socketService.nextRound(this.roomCode);
+    this.showPrompt = true;
+    this.clearCanvas();
+    this.predictions = [];
+    this.roundInProgress = true;
+    this.startTimer = false;
+    setTimeout(() => {
+      this.restartTimer();
+    }, 100);
   }
 
   onGotIt() {
