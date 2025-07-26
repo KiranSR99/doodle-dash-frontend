@@ -7,53 +7,67 @@
 @if(showTimeUp) {
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="text-center">
-        <h2 class="text-2xl font-bold mb-2 text-green-500">Time's Up!</h2>
-        <p class="text-lg text-green-500">Moving to next round...</p>
+        <h2 class="text-xl sm:text-2xl font-bold mb-2 text-green-500">Time's Up!</h2>
+        <p class="text-base sm:text-lg text-green-500">Moving to next round...</p>
     </div>
 </div>
 }
 
-@if(showGameResults) {
-<app-game-results [player1]="player1Data" [player2]="player2Data" [totalRounds]="totalRounds"
-    (playAgain)="onPlayAgainFromResults()" (quit)="onQuitFromResults()">
-</app-game-results>
+@if(showGameStats) {
+<app-game-stats *ngIf="showGameStats" [gameStats]="gameStats" (playAgain)="onPlayAgain()" (quit)="onQuitFromStats()">
+</app-game-stats>
 }
 
-<div class="min-h-screen p-4 max-w-7xl mx-auto">
+@if(waitingForOpponent) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="text-center">
+        <h2 class="text-2xl font-bold mb-2 text-yellow-400">Waiting for opponent to finish...</h2>
+        <p class="text-lg text-yellow-300">Hang tight! You'll be shown the final results soon.</p>
+    </div>
+</div>
+}
+
+
+<div class="min-h-screen p-2 sm:p-4 max-w-7xl mx-auto">
 
     <!-- Header with Quit Button -->
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Doodle Dash</h1>
-        <button (click)="quitGame()" class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded-sm">
+    <div class="flex justify-between items-center mb-4 sm:mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Doodle Dash</h1>
+        <button (click)="quitGame()"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded-sm text-sm sm:text-base">
             Quit Game
         </button>
     </div>
 
-    <div class="flex gap-2">
+    <!-- Main Game Layout - Stack on mobile, side-by-side on larger screens -->
+    <div class="flex flex-col lg:flex-row gap-2 lg:gap-4">
 
         <!-- Canvas Box -->
-        <div class="bg-white rounded-md overflow-hidden border border-gray-200 min-w-4xl">
+        <div class="bg-white rounded-md overflow-hidden border border-gray-200 flex-1 lg:min-w-0">
             <!-- Canvas Header with Round, Word, and Timer -->
-            <div class="bg-gray-50 px-6 py-2 border-b border-gray-200">
-                <div class="flex items-center justify-between">
+            <div class="bg-gray-50 px-3 sm:px-6 py-2 border-b border-gray-200">
+                <div class="flex items-center justify-between text-sm sm:text-base">
                     <span class="text-gray-600 font-medium">Round {{ currentRound }}/{{ totalRounds }}</span>
-                    <span class="text-gray-700 font-medium">Draw: {{ currentWord | titlecase}}</span>
+                    <span class="text-gray-700 font-medium text-center flex-1 mx-2 sm:mx-4 truncate">Draw: {{
+                        currentWord | titlecase}}</span>
                     <app-timer [startRound]="startTimer" (timerCompleted)="onTimerComplete()"></app-timer>
                 </div>
             </div>
 
             <!-- Canvas Drawing Area -->
-            <div class="p-6">
+            <div class="p-3 sm:p-6">
                 <div class="bg-white">
-                    <canvas #canvas class="mx-auto rounded-md cursor-crosshair border border-gray-400"
+                    <canvas #canvas
+                        class="mx-auto rounded-md cursor-crosshair border border-gray-400 w-full max-w-[600px] h-auto"
                         (mousedown)="startDrawing($event)" (mouseup)="stopDrawing()" (mouseleave)="stopDrawing()"
                         (mousemove)="draw($event)">
                     </canvas>
                 </div>
 
                 <!-- Prediction + Clear Button -->
-                <div class="flex justify-between mt-2 w-[600px] mx-auto">
-                    <div class="text-center text-lg font-semibold text-gray-700">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-center mt-2 w-full max-w-[600px] mx-auto gap-2 sm:gap-0">
+                    <div class="text-center text-base sm:text-lg font-semibold text-gray-700 flex-1">
                         <ng-container *ngIf="isLoading">
                             <span class="animate-pulse">Guessing...</span>
                         </ng-container>
@@ -77,65 +91,69 @@
                             <span class="text-gray-400">Start drawing...</span>
                         </ng-container>
                     </div>
-                    <button (click)="clearCanvas()" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-sm">
+                    <button (click)="clearCanvas()"
+                        class="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-2 py-1 rounded-sm text-sm sm:text-base whitespace-nowrap">
                         Clear Canvas
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="max-h-screen w-full border border-gray-200 rounded-md p-2">
+        <!-- Player Stats Section -->
+        <div class="w-full lg:w-80 xl:w-96 border border-gray-200 rounded-md p-2 lg:max-h-screen lg:overflow-y-auto">
             <!-- Current Player Card -->
             <div class="bg-blue-50 rounded-md p-3 border border-blue-200 mb-2">
                 <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2 min-w-0 flex-1">
                         <div
-                            class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                             {{ (myName || 'You').charAt(0).toUpperCase() }}
                         </div>
-                        <span class="font-medium text-gray-800">{{ myName || 'Player (You)' }}</span>
+                        <span class="font-medium text-gray-800 truncate">{{ myName || 'Player (You)' }}</span>
                     </div>
-                    <div class="flex items-center space-x-1">
-                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center space-x-1 flex-shrink-0">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
                             </path>
                         </svg>
-                        <span class="font-bold text-xl text-gray-800">{{ playerScore }}</span>
+                        <span class="font-bold text-lg sm:text-xl text-gray-800">{{ playerScore }}</span>
                     </div>
                 </div>
                 <div class="flex justify-end items-center">
                     <!-- <div class="text-xs text-gray-500">
                         Round: {{ currentPlayerRound }}/{{ totalRounds }}
                     </div> -->
-                    <p class="text-sm text-gray-400">{{ currentPlayerStatus }}</p>
+                    <p class="text-xs sm:text-sm text-gray-400 text-right">{{ currentPlayerStatus }}</p>
                 </div>
             </div>
 
             <!-- Opponent Player Card -->
             <div class="bg-red-50 rounded-md p-3 border border-red-200">
                 <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2 min-w-0 flex-1">
                         <div
-                            class="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            class="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                             {{ (opponentName || 'Opponent').charAt(0).toUpperCase() }}
                         </div>
-                        <span class="font-medium text-gray-800">{{ opponentName || 'Opponent' }}</span>
+                        <span class="font-medium text-gray-800 truncate">{{ opponentName || 'Opponent' }}</span>
                     </div>
-                    <div class="flex items-center space-x-1">
-                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center space-x-1 flex-shrink-0">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
                             </path>
                         </svg>
-                        <span class="font-bold text-xl text-gray-800">{{ opponentScore }}</span>
+                        <span class="font-bold text-lg sm:text-xl text-gray-800">{{ opponentScore }}</span>
                     </div>
                 </div>
                 <div class="flex justify-end items-center">
                     <!-- <div class="text-xs text-gray-500">
                         Round: {{ opponentRound }}/{{ totalRounds }}
                     </div> -->
-                    <p class="text-sm text-gray-400">{{ opponentStatus }}</p>
+                    <p class="text-xs sm:text-sm text-gray-400 text-right">{{ opponentStatus }}</p>
                 </div>
             </div>
         </div>
