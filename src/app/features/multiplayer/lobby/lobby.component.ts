@@ -1,10 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
+// ... unchanged imports
 import { SocketService } from '../../../core/services/socket.service';
 import { PlayerService } from '../services/player.service';
 import { GameStartCountdownComponent } from '../../../shared/components/game-start-countdown/game-start-countdown.component';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 interface Player {
   name: string;
@@ -43,11 +44,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.roomCode = this.route.snapshot.params['roomCode'] || '';
-
-    // Get player name from service
     this.currentPlayerName = this.playerService.getCurrentPlayerName();
 
-    // Subscribe to player name changes
     this.subscriptions.push(
       this.playerService.currentPlayerName$.subscribe(name => {
         this.currentPlayerName = name;
@@ -99,6 +97,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
         }, 3000);
       }),
 
+      this.socketService.onCreatorChanged().subscribe(data => {
+        console.log('[LOBBY] Creator changed to:', data.new_creator);
+        if (this.roomData) {
+          this.roomData.creator = data.new_creator;
+        }
+      }),
+
       this.socketService.onError().subscribe(error => {
         console.error('[LOBBY] Socket error:', error);
         alert(error.message || 'An error occurred');
@@ -126,7 +131,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   private checkConnection(): void {
     this.isConnected = this.socketService.isConnected();
-
     if (!this.isConnected) {
       console.log('[LOBBY] Connection lost, attempting to reconnect...');
       this.socketService.reconnect();
@@ -142,10 +146,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   leaveRoom(): void {
     if (confirm('Are you sure you want to leave this room?')) {
       console.log('[LOBBY] Leaving room:', this.roomCode);
-
-      // Clear player name from service
       this.playerService.clearPlayerName();
-
       this.socketService.leaveRoom(this.roomCode);
       this.router.navigate(['/']);
     }
@@ -157,7 +158,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check if current player is the creator using service
     if (this.currentPlayerName !== this.roomData.creator) {
       alert('Only the room creator can start the game!');
       return;

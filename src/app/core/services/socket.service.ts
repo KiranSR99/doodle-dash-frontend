@@ -14,6 +14,7 @@ export class SocketService {
     });
   }
 
+  // === Emitters ===
   createRoom(name: string) {
     console.log('[SOCKET] Creating room for:', name);
     this.socket.emit('create_room', { name });
@@ -41,10 +42,10 @@ export class SocketService {
   }
 
   leaveRoom(room_code: string) {
-    console.log('[SOCKET] Leaving room:', room_code);
     this.socket.emit('leave_room', { room_code });
   }
 
+  // === Listeners ===
   onRoomCreated(): Observable<any> {
     return this.listenToSocketEvent('room_created');
   }
@@ -58,12 +59,7 @@ export class SocketService {
   }
 
   onRoomData(): Observable<any> {
-    return new Observable(observer => {
-      this.socket.on('room_data', (data) => {
-        console.log('[SOCKET] Room data received:', data);
-        observer.next(data);
-      });
-    });
+    return this.listenToSocketEvent('room_data');
   }
 
   onGameStart(): Observable<any> {
@@ -82,10 +78,6 @@ export class SocketService {
     return this.listenToSocketEvent('game_over');
   }
 
-  onError(): Observable<any> {
-    return this.listenToSocketEvent('error');
-  }
-
   onPlayerDisconnected(): Observable<any> {
     return this.listenToSocketEvent('player_disconnected');
   }
@@ -94,6 +86,15 @@ export class SocketService {
     return this.listenToSocketEvent('player_left');
   }
 
+  onCreatorChanged(): Observable<any> {
+    return this.listenToSocketEvent('creator_changed');
+  }
+
+  onError(): Observable<any> {
+    return this.listenToSocketEvent('error');
+  }
+
+  // === Connection Utils ===
   disconnect() {
     this.socket.disconnect();
   }
@@ -106,11 +107,12 @@ export class SocketService {
     return this.socket.connected;
   }
 
+  // === Utility ===
   private listenToSocketEvent(eventName: string): Observable<any> {
     return new Observable((observer) => {
-      this.socket.off(eventName);
+      this.socket.off(eventName); // Prevent duplicate listeners
       this.socket.on(eventName, (data) => {
-        // console.log(`[SOCKET] ${eventName} event received:`, data);
+        console.log(`[SOCKET] ${eventName} event received:`, data);
         observer.next(data);
       });
     });

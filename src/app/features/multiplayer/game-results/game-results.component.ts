@@ -1,17 +1,5 @@
-import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-
-interface Player {
-  id: string;
-  name: string;
-  score: number;
-  rounds: Array<{
-    word: string;
-    correct: boolean;
-    timeTaken: number;
-    score: number;
-  }>;
-}
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-game-results',
@@ -20,65 +8,68 @@ interface Player {
   styleUrl: './game-results.component.css'
 })
 export class GameResultsComponent {
-  @Input() player1: Player = {
-    id: '',
-    name: '',
-    score: 0,
-    rounds: []
-  };
-  
-  @Input() player2: Player = {
-    id: '',
-    name: '',
-    score: 0,
-    rounds: []
-  };
+  @Input() myName: string = '';
+  @Input() myScore: number = 0;
+  @Input() opponentName: string = '';
+  @Input() opponentScore: number = 0;
+  @Input() opponentStatus: string = '';
 
-  @Input() totalRounds: number = 5;
   @Output() playAgain = new EventEmitter<void>();
-  @Output() quit = new EventEmitter<void>();
+  @Output() home = new EventEmitter<void>();
 
-  getWinner(): Player | null {
-    if (this.player1.score > this.player2.score) {
-      return this.player1;
-    } else if (this.player2.score > this.player1.score) {
-      return this.player2;
+  get winner(): string {
+    // If opponent disconnected, current player wins
+    if (this.isOpponentDisconnected) {
+      return this.myName || 'You';
     }
-    return null; // It's a tie
-  }
 
-  getWinnerMessage(): string {
-    const winner = this.getWinner();
-    if (!winner) {
-      return "It's a Tie! 🤝";
+    if (this.myScore > this.opponentScore) {
+      return this.myName || 'You';
+    } else if (this.opponentScore > this.myScore) {
+      return this.opponentName || 'Opponent';
     }
-    return `🎉 ${winner.name} Wins!`;
+    return 'Tie';
   }
 
-  getWinnerSubMessage(): string {
-    const winner = this.getWinner();
-    if (!winner) {
-      return "Both players scored equally well!";
+  get isWinner(): boolean {
+    return this.isOpponentDisconnected || this.myScore > this.opponentScore;
+  }
+
+  get isTie(): boolean {
+    return !this.isOpponentDisconnected && this.myScore === this.opponentScore;
+  }
+
+  get isOpponentDisconnected(): boolean {
+    return this.opponentStatus === 'Disconnected';
+  }
+
+  get winMessage(): string {
+    if (this.isOpponentDisconnected) {
+      return '🎉 You Win!';
+    } else if (this.isWinner) {
+      return '🎉 You Win!';
+    } else if (this.isTie) {
+      return '🤝 It\'s a Tie!';
+    } else {
+      return '😔 You Lose!';
     }
-    const scoreDiff = Math.abs(this.player1.score - this.player2.score);
-    return `Won by ${scoreDiff} points!`;
   }
 
-  getPlayerAccuracy(player: Player): number {
-    if (player.rounds.length === 0) return 0;
-    const correctRounds = player.rounds.filter(round => round.correct).length;
-    return Math.round((correctRounds / player.rounds.length) * 100);
-  }
-
-  getPlayerCorrectGuesses(player: Player): number {
-    return player.rounds.filter(round => round.correct).length;
+  get subMessage(): string {
+    if (this.isOpponentDisconnected) {
+      return 'Opponent disconnected';
+    } else if (this.isTie) {
+      return 'Great game!';
+    } else {
+      return `${this.winner} is the winner!`;
+    }
   }
 
   onPlayAgain() {
     this.playAgain.emit();
   }
 
-  onQuit() {
-    this.quit.emit();
+  backToHome() {
+    this.home.emit();
   }
 }

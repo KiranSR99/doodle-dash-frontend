@@ -13,9 +13,11 @@
 </div>
 }
 
-@if(showGameStats) {
-<app-game-stats *ngIf="showGameStats" [gameStats]="gameStats" (playAgain)="onPlayAgain()" (quit)="onQuitFromStats()">
-</app-game-stats>
+@if(showGameResults) {
+<app-game-results [myName]="myName" [myScore]="playerScore" [opponentName]="opponentName"
+    [opponentScore]="opponentScore" [opponentStatus]="opponentStatus" (playAgain)="onPlayAgain()"
+    (home)="onBackToHome()">
+</app-game-results>
 }
 
 @if(waitingForOpponent) {

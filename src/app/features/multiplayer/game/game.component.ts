@@ -4,14 +4,14 @@ import { SocketService } from '../../../core/services/socket.service';
 import { TimerComponent } from '../../../shared/components/timer/timer.component';
 import { CommonModule, Location } from '@angular/common';
 import { RoundDetailComponent } from '../../../shared/components/round-detail/round-detail.component';
-import { GameStatsComponent } from '../../../shared/components/game-stats/game-stats.component';
 import { GameService } from '../../../core/services/game.service';
 import { ScoreService } from '../../../core/services/score.service';
 import { PlayerService } from '../services/player.service';
+import { GameResultsComponent } from '../game-results/game-results.component';
 
 @Component({
   selector: 'app-game',
-  imports: [CommonModule, TimerComponent, RoundDetailComponent, GameStatsComponent],
+  imports: [CommonModule, TimerComponent, RoundDetailComponent, GameResultsComponent],
   templateUrl: './game.component.html',
   styleUrl: './game.component.css'
 })
@@ -36,7 +36,7 @@ export class GameComponent {
   public showPrompt: boolean = true;
   public startTimer: boolean = false;
   public showTimeUp: boolean = false;
-  public showGameStats: boolean = false;
+  public showGameResults: boolean = false;
   public playerScore: number = 0;
 
   // Player tracking variables
@@ -109,6 +109,18 @@ export class GameComponent {
       this.handleGameOver(data);
     });
 
+    // Listen for player disconnections
+    this.socketService.onPlayerDisconnected().subscribe(data => {
+      console.log('[SOCKET] Player disconnected:', data);
+      this.handlePlayerDisconnection(data);
+    });
+
+    // Listen for player leaving
+    this.socketService.onPlayerLeft().subscribe(data => {
+      console.log('[SOCKET] Player left:', data);
+      this.handlePlayerDisconnection(data);
+    });
+
     // Start the first round
     this.socketService.nextRound(this.roomCode);
   }
@@ -169,7 +181,30 @@ export class GameComponent {
 
     // Both players are done if this event is triggered
     this.waitingForOpponent = false;
-    this.showGameStats = true;
+    this.showGameResults = true;
+  }
+
+  private handlePlayerDisconnection(disconnectionData: any) {
+    console.log('[GAME] Player disconnection detected:', disconnectionData);
+
+    // Stop any ongoing round
+    this.roundInProgress = false;
+    this.startTimer = false;
+
+    // Hide any current overlays
+    this.showPrompt = false;
+    this.showTimeUp = false;
+    this.waitingForOpponent = false;
+
+    // Update opponent status
+    if (disconnectionData.player_id === this.opponentId ||
+      disconnectionData.player_name === this.opponentName) {
+      this.opponentStatus = 'Disconnected';
+    }
+
+    // Show game results immediately with current scores
+    // The player who stayed gets a win by default
+    this.showGameResults = true;
   }
 
 
@@ -305,7 +340,7 @@ export class GameComponent {
       }, 100);
     } else {
       if (this.currentPlayerStatus === 'Game Completed' && this.opponentStatus === 'Game Completed') {
-        this.showGameStats = true;
+        this.showGameResults = true;
         // setTimeout(() => {
         // }, 1000);
       } else {
@@ -361,7 +396,9 @@ export class GameComponent {
 
   quitGame() {
     if (confirm('Are you sure you want to quit the game?')) {
-      this.location.back();
+      // Notify server that player is leaving
+      this.socketService.leaveRoom(this.roomCode);
+      this.router.navigate(['/']);
     }
   }
 
@@ -373,7 +410,7 @@ export class GameComponent {
     this.opponentRound = 0;
     this.currentPlayerStatus = 'Game in progress...';
     this.opponentStatus = 'Game in progress...';
-    this.showGameStats = false;
+    this.showGameResults = false;
     this.showPrompt = true;
     this.roundInProgress = true;
     this.gameStats = {
@@ -384,7 +421,16 @@ export class GameComponent {
     this.clearCanvas();
   }
 
-  onQuitFromStats() {
-    this.location.back();
+  onBackToHome() {
+    // Notify server that player is leaving
+    this.socketService.leaveRoom(this.roomCode);
+    this.router.navigate(['/']);
+  }
+
+  ngOnDestroy() {
+    // Clean up when component is destroyed
+    if (this.roomCode) {
+      this.socketService.leaveRoom(this.roomCode);
+    }
   }
 }
