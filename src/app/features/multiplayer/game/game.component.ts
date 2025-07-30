@@ -402,23 +402,9 @@ export class GameComponent {
     }
   }
 
-  onPlayAgain() {
-    this.currentRound = 1;
-    this.playerScore = 0;
-    this.opponentScore = 0;
-    this.currentPlayerRound = 0;
-    this.opponentRound = 0;
-    this.currentPlayerStatus = 'Game in progress...';
-    this.opponentStatus = 'Game in progress...';
-    this.showGameResults = false;
-    this.showPrompt = true;
-    this.roundInProgress = true;
-    this.gameStats = {
-      totalRounds: 0,
-      correctGuesses: 0,
-      rounds: []
-    };
-    this.clearCanvas();
+  onBackToLobby() {
+    this.socketService.returnToLobby(this.roomCode);
+    this.location.back();
   }
 
   onBackToHome() {
@@ -427,10 +413,9 @@ export class GameComponent {
     this.router.navigate(['/']);
   }
 
-  ngOnDestroy() {
-    // Clean up when component is destroyed
-    if (this.roomCode) {
-      this.socketService.leaveRoom(this.roomCode);
-    }
-  }
+  // ngOnDestroy() { 
+  //   if (this.roomCode) {
+  //     this.socketService.leaveRoom(this.roomCode);
+  //   }
+  // }
 }

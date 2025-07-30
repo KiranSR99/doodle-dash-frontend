@@ -13,8 +13,10 @@ export class GameResultsComponent {
   @Input() opponentName: string = '';
   @Input() opponentScore: number = 0;
   @Input() opponentStatus: string = '';
+  @Input() roomCode: string = '';
+  @Input() gameAbandoned: boolean = false;
 
-  @Output() playAgain = new EventEmitter<void>();
+  @Output() lobby = new EventEmitter<void>();
   @Output() home = new EventEmitter<void>();
 
   get winner(): string {
@@ -65,8 +67,8 @@ export class GameResultsComponent {
     }
   }
 
-  onPlayAgain() {
-    this.playAgain.emit();
+  onBackToLobby() {
+    this.lobby.emit();
   }
 
   backToHome() {

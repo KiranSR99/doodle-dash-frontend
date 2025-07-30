@@ -15,8 +15,7 @@
 
 @if(showGameResults) {
 <app-game-results [myName]="myName" [myScore]="playerScore" [opponentName]="opponentName"
-    [opponentScore]="opponentScore" [opponentStatus]="opponentStatus" (playAgain)="onPlayAgain()"
-    (home)="onBackToHome()">
+    [opponentScore]="opponentScore" [opponentStatus]="opponentStatus" (lobby)="onBackToLobby()" (home)="onBackToHome()">
 </app-game-results>
 }
 

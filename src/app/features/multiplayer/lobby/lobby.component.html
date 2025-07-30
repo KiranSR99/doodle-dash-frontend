@@ -13,6 +13,17 @@
                         Playing as: <span class="font-medium">{{ currentPlayerName }}</span>
                         <span *ngIf="isCreator()" class="text-yellow-500 ml-1">👑</span>
                     </p>
+                    <!-- Room Status Indicator -->
+                    <div class="mt-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="{
+                                'bg-yellow-100 text-yellow-800': roomData?.status === 'waiting',
+                                'bg-green-100 text-green-800': roomData?.status === 'ready',
+                                'bg-blue-100 text-blue-800': roomData?.status === 'post_game',
+                                'bg-red-100 text-red-800': roomData?.status === 'abandoned'
+                            }">
+                            {{ getRoomStatusText() }}
+                        </span>
+                    </div>
                 </div>
                 <div class="flex gap-3">
                     <button (click)="copyRoomCode()"
@@ -34,6 +45,23 @@
             </div>
         </div>
 
+        <!-- Special Status Messages -->
+        <div *ngIf="waitingForReturn"
+            class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg mb-6">
+            <div class="flex items-center justify-between">
+                <span>{{ waitingMessage }}</span>
+                <span *ngIf="countdownTime > 0" class="font-mono font-bold">{{ countdownTime }}s</span>
+            </div>
+        </div>
+
+        <div *ngIf="showGameAbandoned"
+            class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg mb-6">
+            <div class="text-center">
+                <p class="font-semibold">{{ abandonedMessage }}</p>
+                <p class="text-sm mt-1">You can invite a new player or wait for someone to join.</p>
+            </div>
+        </div>
+
         <!-- Players Section -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -42,13 +70,17 @@
 
             <div class="grid md:grid-cols-2 gap-4">
                 <div *ngFor="let player of roomData?.players; let i = index"
-                    class="flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200">
+                    class="flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200"
+                    [ngClass]="{
+                        'border-green-200 bg-green-50': roomData?.status === 'ready',
+                        'border-gray-200 bg-white': roomData?.status !== 'ready'
+                    }">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
                             [ngClass]="{
-                    'bg-indigo-500': i === 0,
-                    'bg-purple-500': i === 1
-                    }">
+                                'bg-indigo-500': i === 0,
+                                'bg-purple-500': i === 1
+                            }">
                             {{ player.name.charAt(0).toUpperCase() }}
                         </div>
                         <div>
@@ -57,6 +89,7 @@
                                 <span *ngIf="player.name === roomData?.creator" class="text-yellow-500 ml-1">👑</span>
                                 <span *ngIf="player.name === currentPlayerName" class="text-blue-500 ml-1">(You)</span>
                             </p>
+                            <p *ngIf="roomData?.status === 'ready'" class="text-xs text-green-600">Ready to play</p>
                         </div>
                     </div>
                 </div>
@@ -65,24 +98,47 @@
                 <div *ngIf="(roomData?.players?.length || 0) < 2"
                     class="flex items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
                     <div class="text-center text-gray-500">
+                        <div
+                            class="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+                            <span class="text-xl">+</span>
+                        </div>
                         <p class="text-sm">Waiting for player...</p>
+                        <p class="text-xs mt-1">Share the room code: <span class="font-mono">{{ roomCode }}</span></p>
                     </div>
                 </div>
             </div>
 
-            <!-- Start Game Button - Only show for creator -->
+            <!-- Game Control Section -->
             <div class="mt-6">
-                <button *ngIf="isCreator()" (click)="startGame()" [disabled]="(roomData?.players?.length || 0) < 2"
+                <!-- Start Game Button - Only show for creator -->
+                <button *ngIf="isCreator() && canStartGame()" (click)="startGame()" [disabled]="!canStartGame()"
                     class="w-full p-3 rounded-md font-semibold cursor-pointer transition-colors duration-200" [ngClass]="{
-                        'bg-green-400 hover:bg-green-500 text-white': (roomData?.players?.length || 0) >= 2,
-                        'bg-gray-300 text-gray-500 cursor-not-allowed': (roomData?.players?.length || 0) < 2
+                        'bg-green-500 hover:bg-green-600 text-white': canStartGame(),
+                        'bg-gray-300 text-gray-500 cursor-not-allowed': !canStartGame()
                     }">
-                    {{ (roomData?.players?.length || 0) >= 2 ? 'Start Game' : 'Waiting for player...' }}
+                    {{ getStartButtonText() }}
                 </button>
 
-                <div *ngIf="!isCreator()" class="text-center text-gray-500 p-3">
+                <!-- Non-creator waiting message -->
+                <div *ngIf="!isCreator() && roomData?.status !== 'post_game'" class="text-center text-gray-500 p-3">
                     <p>Waiting for {{ roomData?.creator }} to start the game...</p>
                 </div>
+
+                <!-- Post-game return message -->
+                <div *ngIf="roomData?.status === 'post_game' && !isCreator()" class="text-center text-blue-500 p-3">
+                    <p>Returning to lobby...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Instructions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">How to Play</h3>
+            <div class="space-y-2 text-sm text-gray-600">
+                <p>• Share the room code with your friend to let them join</p>
+                <p>• The room creator (👑) can start the game when both players are ready</p>
+                <p>• Draw the given words as clearly as possible</p>
+                <p>• You'll have 5 rounds to showcase your artistic skills!</p>
             </div>
         </div>
     </div>
