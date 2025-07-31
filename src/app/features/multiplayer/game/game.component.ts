@@ -412,10 +412,4 @@ export class GameComponent {
     this.socketService.leaveRoom(this.roomCode);
     this.router.navigate(['/']);
   }
-
-  // ngOnDestroy() { 
-  //   if (this.roomCode) {
-  //     this.socketService.leaveRoom(this.roomCode);
-  //   }
-  // }
 }
