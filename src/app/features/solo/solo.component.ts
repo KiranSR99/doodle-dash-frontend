@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { TimerComponent } from '../../shared/components/timer/timer.component';
 import { GameService } from '../../core/services/game.service';
@@ -13,10 +13,13 @@ import { GameStatsComponent } from '../../shared/components/game-stats/game-stat
 })
 export class SoloComponent {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('canvasContainer', { static: true }) canvasContainerRef!: ElementRef<HTMLDivElement>;
+
   private ctx!: CanvasRenderingContext2D;
   private drawing = false;
   private predictionTimeout: any;
   private roundInProgress = true;
+
   public predictions: any[] = [];
   public isLoading = false;
   public lastPredictionTime = 0;
@@ -37,12 +40,47 @@ export class SoloComponent {
   constructor(private gameService: GameService, private location: Location) { }
 
   ngOnInit() {
-    const canvas = this.canvasRef.nativeElement;
-    canvas.width = 600;
-    canvas.height = 450;
-    this.ctx = canvas.getContext('2d')!;
-    this.clearCanvas();
+    this.initializeCanvas();
     this.getWordsToDraw();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.setupCanvasSize();
+  }
+
+  private initializeCanvas() {
+    const canvas = this.canvasRef.nativeElement;
+    this.ctx = canvas.getContext('2d')!;
+    this.setupCanvasSize();
+    this.clearCanvas();
+  }
+
+  private setupCanvasSize() {
+    const canvas = this.canvasRef.nativeElement;
+    const container = this.canvasContainerRef.nativeElement;
+
+    // Get container width and calculate responsive size
+    const containerWidth = container.clientWidth;
+    const maxWidth = Math.min(containerWidth - 32, 600); // Account for padding and max width
+    const aspectRatio = 4 / 3; // 600:450 ratio
+
+    const canvasWidth = maxWidth;
+    const canvasHeight = maxWidth / aspectRatio;
+
+    // Set actual canvas dimensions
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    // Set CSS dimensions to match exactly
+    canvas.style.width = `${canvasWidth}px`;
+    canvas.style.height = `${canvasHeight}px`;
+
+    // Redraw if canvas already has content
+    if (this.ctx) {
+      this.ctx.fillStyle = '#fff';
+      this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
   }
 
   getWordsToDraw(): void {
@@ -124,9 +162,16 @@ export class SoloComponent {
   draw(event: MouseEvent) {
     if (!this.drawing) return;
 
-    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const canvas = this.canvasRef.nativeElement;
+    const rect = canvas.getBoundingClientRect();
+
+    // Calculate the scale factors to map mouse coordinates to canvas coordinates
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    // Get mouse position relative to canvas and scale it
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
 
     this.ctx.lineWidth = 20;
     this.ctx.lineCap = 'round';
