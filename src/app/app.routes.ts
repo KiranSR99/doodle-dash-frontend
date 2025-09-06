@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { TimerComponent } from './shared/components/timer/timer.component';
 import { TestComponent } from './shared/components/test/test.component';
 import { RoundDetailComponent } from './shared/components/round-detail/round-detail.component';
+import { ScratchComponent } from './shared/components/scratch/scratch.component';
 
 export const routes: Routes = [
     {
@@ -19,6 +20,10 @@ export const routes: Routes = [
     {
         path: 'detail',
         component: RoundDetailComponent
+    },
+    {
+        path: 'scratch',
+        component: ScratchComponent
     },
     {
         path: '**',

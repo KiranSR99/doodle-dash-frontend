@@ -248,30 +248,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }
   }
 
-  getStartButtonText(): string {
-    if (!this.roomData) return 'Loading...';
-
-    const playerCount = this.roomData.players.length;
-
-    switch (this.roomData.status) {
-      case 'post_game':
-        return 'Waiting for players to return...';
-      case 'waiting':
-        return playerCount < 2 ? 'Waiting for player...' : 'Start Game';
-      case 'ready':
-        return 'Start Game';
-      default:
-        return 'Cannot start game';
-    }
-  }
-
-  canStartGame(): boolean {
-    if (!this.roomData || !this.isCreator()) return false;
-
-    return (this.roomData.players.length >= 2) &&
-      (this.roomData.status === 'ready' || this.roomData.status === 'waiting');
-  }
-
   // Action Methods
   copyRoomCode(): void {
     if (navigator.clipboard && window.isSecureContext) {
@@ -315,5 +291,54 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   isCreator(): boolean {
     return this.currentPlayerName === this.roomData?.creator;
+  }
+
+  // Helper method to check if current player is the creator
+  isCurrentPlayerCreator(): boolean {
+    return this.currentPlayerName === this.roomData?.creator && this.getCreatorPlayer()?.name === this.currentPlayerName;
+  }
+
+  // Helper method to check if current player is the non-creator
+  isCurrentPlayerNonCreator(): boolean {
+    const nonCreator = this.getNonCreatorPlayer();
+    return nonCreator?.name === this.currentPlayerName && this.currentPlayerName !== this.roomData?.creator;
+  }
+
+  // Helper method to get the creator player
+  getCreatorPlayer(): Player | null {
+    if (!this.roomData?.players) return null;
+    return this.roomData.players.find(player => player.name === this.roomData?.creator) || null;
+  }
+
+  // Helper method to get the non-creator player
+  getNonCreatorPlayer(): Player | null {
+    if (!this.roomData?.players) return null;
+    return this.roomData.players.find(player => player.name !== this.roomData?.creator) || null;
+  }
+
+  // Updated getStartButtonText method
+  getStartButtonText(): string {
+    if (!this.roomData) return 'Loading...';
+
+    const playerCount = this.roomData.players.length;
+
+    switch (this.roomData.status) {
+      case 'post_game':
+        return 'Waiting for players to return...';
+      case 'waiting':
+        return playerCount < 2 ? 'Waiting for Player...' : 'Start Game';
+      case 'ready':
+        return 'Start Game';
+      default:
+        return 'Cannot start game';
+    }
+  }
+
+  // Updated canStartGame method
+  canStartGame(): boolean {
+    if (!this.roomData || !this.isCreator()) return false;
+
+    return (this.roomData.players.length >= 2) &&
+      (this.roomData.status === 'ready' || this.roomData.status === 'waiting');
   }
 }

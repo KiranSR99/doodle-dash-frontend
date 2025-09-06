@@ -20,4 +20,9 @@ export class GameService {
   getWords(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/round-words`);
   }
+
+  //Scratch CNN Model Prediction
+  predictDrawingScratch(base64Image: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/predict/scratch`, { image: base64Image });
+  }
 }

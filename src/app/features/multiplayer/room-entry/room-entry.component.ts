@@ -5,10 +5,13 @@ import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SocketService } from '../../../core/services/socket.service';
 import { PlayerService } from '../services/player.service';
+import { Dialog } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-handle-room',
-  imports: [FormsModule],
+  imports: [FormsModule, Dialog, ButtonModule, InputTextModule],
   templateUrl: './room-entry.component.html',
   styleUrl: './room-entry.component.css'
 })
@@ -17,6 +20,10 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
   roomCode: string = '';
   isCreatingRoom: boolean = false;
   isJoiningRoom: boolean = false;
+  
+  // Dialog visibility flags
+  showCreateRoomDialog: boolean = false;
+  showJoinRoomDialog: boolean = false;
 
   private subscriptions: Subscription[] = [];
 
@@ -35,25 +42,45 @@ export class RoomEntryComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
+  // Dialog control methods
+  showCreateDialog() {
+    this.resetForm();
+    this.showCreateRoomDialog = true;
+  }
+
+  showJoinDialog() {
+    this.resetForm();
+    this.showJoinRoomDialog = true;
+  }
+
+  private resetForm() {
+    this.username = '';
+    this.roomCode = '';
+    this.isCreatingRoom = false;
+    this.isJoiningRoom = false;
+  }
+
   private setupEventListeners(): void {
     this.subscriptions.push(
       this.socketService.onRoomCreated().subscribe(data => {
         console.log('[SOCKET] Room created:', data);
         this.isCreatingRoom = false;
-        
+        this.showCreateRoomDialog = false;
+       
         // Set player name in service
         this.playerService.setPlayerName(this.username.trim());
-        
+       
         this.router.navigate(['/multiplayer/lobby', data.room_code]);
       }),
 
       this.socketService.onRoomJoined().subscribe(data => {
         console.log('[SOCKET] Joined room:', data);
         this.isJoiningRoom = false;
-        
+        this.showJoinRoomDialog = false;
+       
         // Set player name in service
         this.playerService.setPlayerName(this.username.trim());
-        
+       
         this.router.navigate(['/multiplayer/lobby', data.room_code]);
       }),
 
