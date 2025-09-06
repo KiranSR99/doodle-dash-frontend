@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { GameStartCountdownComponent } from '../../shared/components/game-start-countdown/game-start-countdown.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, GameStartCountdownComponent],
+  imports: [RouterLink, GameStartCountdownComponent, CommonModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
