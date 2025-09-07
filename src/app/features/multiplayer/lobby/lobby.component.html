@@ -1,0 +1,158 @@
+<div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl">
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Game Room</h1>
+            <p class="text-gray-600">Invite your friend and start the game</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div *ngIf="!isConnected" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <div class="flex items-center justify-center">
+                Connection lost. Attempting to reconnect...
+            </div>
+        </div>
+
+        <!-- Special Status Messages -->
+        <div *ngIf="waitingForReturn"
+            class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg mb-6">
+            <div class="flex items-center justify-between">
+                <span>{{ waitingMessage }}</span>
+                <span *ngIf="countdownTime > 0" class="font-mono font-bold">{{ countdownTime }}s</span>
+            </div>
+        </div>
+
+        <div *ngIf="showGameAbandoned"
+            class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg mb-6">
+            <div class="text-center">
+                <p class="font-semibold">{{ abandonedMessage }}</p>
+                <p class="text-sm mt-1">You can invite a new player or wait for someone to join.</p>
+            </div>
+        </div>
+
+        <!-- Main Game Room Card -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+
+                <!-- Left Player (Creator) -->
+                <div class="flex flex-col items-center space-y-4 min-h-[200px]">
+                    <div *ngIf="getCreatorPlayer()" class="text-center">
+                        <!-- Player Avatar -->
+                        <div
+                            class="w-20 h-20 rounded-full mx-auto bg-blue-300 border-4 border-blue-500 flex items-center justify-center mb-3">
+                            <span class="text-2xl font-bold text-white">
+                                {{ getCreatorPlayer()?.name?.charAt(0)?.toUpperCase() }}
+                            </span>
+                        </div>
+                        <!-- Player Name -->
+                        <h3 class="font-semibold text-gray-500 text-lg">
+                            {{ getCreatorPlayer()?.name }} (Creator)
+                        </h3>
+                        <!-- Status -->
+                        <div class="flex items-center justify-center mt-2">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <span class="text-sm text-green-600">Ready</span>
+                        </div>
+                        <!-- Leave Button - Show only if current player is creator -->
+                        <button *ngIf="isCurrentPlayerCreator()" (click)="leaveRoom()"
+                            class="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 text-sm">
+                            Leave
+                        </button>
+                        <!-- Invisible spacer for non-creators to maintain layout -->
+                        <div *ngIf="!isCurrentPlayerCreator()" class="mt-3 px-4 py-2 invisible">
+                            <span class="text-sm">Leave</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center - Room Code -->
+                <div class="text-center min-h-[200px] flex flex-col justify-center">
+                    <p class="text-gray-600 mb-2 uppercase tracking-wide text-sm">Room Code</p>
+                    <div class="text-4xl font-bold text-green-400 mb-4">
+                        {{ roomCode }}
+                    </div>
+                    <button (click)="copyRoomCode()"
+                        class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 text-sm mx-auto">
+                        Copy
+                    </button>
+                </div>
+
+                <!-- Right Player (Second Player or Waiting) -->
+                <div class="flex flex-col items-center space-y-4 min-h-[200px]">
+                    <div *ngIf="getNonCreatorPlayer(); else waitingForPlayer" class="text-center">
+                        <!-- Player Avatar -->
+                        <div
+                            class="w-20 h-20 mx-auto rounded-full bg-red-300 border-4 border-red-500 flex items-center justify-center mb-3">
+                            <span class="text-2xl font-bold text-white">
+                                {{ getNonCreatorPlayer()?.name?.charAt(0)?.toUpperCase() }}
+                            </span>
+                        </div>
+                        <!-- Player Name -->
+                        <h3 class="font-semibold text-gray-800 text-lg">
+                            {{ getNonCreatorPlayer()?.name }}
+                        </h3>
+                        <!-- Status -->
+                        <div class="flex items-center justify-center mt-2">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <span class="text-sm text-green-600">Ready</span>
+                        </div>
+                        <!-- Leave Button - Show only if current player is the non-creator -->
+                        <button *ngIf="isCurrentPlayerNonCreator()" (click)="leaveRoom()"
+                            class="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 text-sm">
+                            Leave
+                        </button>
+                        <!-- Invisible spacer for creators to maintain layout -->
+                        <div *ngIf="!isCurrentPlayerNonCreator()" class="mt-3 px-4 py-2 invisible">
+                            <span class="text-sm">Leave</span>
+                        </div>
+                    </div>
+
+                    <!-- Waiting for Player Template -->
+                    <ng-template #waitingForPlayer>
+                        <div class="text-center">
+                            <!-- Empty Avatar -->
+                            <div
+                                class="w-20 h-20 mx-auto rounded-full bg-gray-300 border-4 border-gray-400 flex items-center justify-center mb-3">
+                                <span class="text-2xl text-gray-500">?</span>
+                            </div>
+                            <!-- Waiting Text -->
+                            <h3 class="font-semibold text-gray-500 text-lg">Waiting...</h3>
+                            <p class="text-sm text-gray-400 mt-2">Shared the room code?</p>
+                            <!-- Invisible spacer to maintain layout consistency -->
+                            <div class="mt-3 px-4 py-2 invisible">
+                                <span class="text-sm">Leave</span>
+                            </div>
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+
+            <!-- Start Game Button -->
+            <div class="mt-8 text-center ">
+                <button *ngIf="isCreator()" (click)="startGame()" [disabled]="!canStartGame()"
+                    class="px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200" [ngClass]="{
+                            'bg-blue-500 hover:bg-blue-600 text-white cursor-pointer': canStartGame(),
+                            'bg-gray-300 text-gray-500 cursor-not-allowed': !canStartGame()
+                        }">
+                    {{ getStartButtonText() }}
+                </button>
+
+                <!-- Non-creator waiting message -->
+                <div *ngIf="!isCreator() && roomData?.status !== 'post_game'" class="text-gray-500">
+                    <p>Waiting for {{ roomData?.creator }} to start the game...</p>
+                </div>
+
+                <!-- Post-game return message -->
+                <div *ngIf="roomData?.status === 'post_game' && !isCreator()" class="text-blue-500">
+                    <p>Returning to lobby...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@if(gameStartingCountdown) {
+<app-game-start-countdown (countdownFinished)="gameStartingCountdown = false"></app-game-start-countdown>
+}

@@ -1,0 +1,95 @@
+/* Compact, minimalistic styles for scratch component */
+.canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    touch-action: none;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Smooth transitions for all interactive elements */
+button {
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Confidence bar animation */
+.confidence-bar {
+    transition: width 0.5s ease-in-out;
+}
+
+/* Loading spinner */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Ensure full height usage */
+.h-\[calc\(100vh-120px\)\] {
+    height: calc(100vh - 120px);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 1024px) {
+    .lg\:col-span-5 {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .lg\:col-span-1,
+    .lg\:col-span-3 {
+        grid-column: span 1;
+    }
+
+    .h-\[calc\(100vh-120px\)\] {
+        height: auto;
+        min-height: 400px;
+    }
+}
+
+/* Scrollbar styling for small screens */
+::-webkit-scrollbar {
+    width: 2px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 1px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Clean, minimal card styling */
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure text doesn't break layout */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

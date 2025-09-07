@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+:root {
+    --font-inter: "Inter", sans-serif;
+}
+
+
+.font-space-grotesk {
+    font-family: "Space Grotesk", sans-serif;
+}
+
+body {
+    /* font-family: var(--font-inter); */
+    font-family: "Space Grotesk", sans-serif;
+
+    min-height: 100vh;
+    background-color: #ffffff;
+    /* base white */
+    background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+    background-size: 16px 16px;
+    background-position: 0 0;
+}
+
+
+.dot-grid-background {
+    background-color: #ffffff;
+    background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+    background-size: 16px 16px;
+    background-position: 0 0;
+}

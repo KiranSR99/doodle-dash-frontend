@@ -1,0 +1,78 @@
+<!-- Room Cards Container -->
+<div class="flex flex-col h-screen lg:flex-row gap-8 justify-center items-center max-w-4xl mx-auto px-4">
+    <!-- Create a Room Card -->
+    <div class="group cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+        (click)="showCreateDialog()">
+        <div
+            class="bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-600 transition-colors duration-300">
+            <!-- Card Image -->
+            <div class="relative h-64 w-80 overflow-hidden">
+                <img src="/images/create.jpeg" alt="Create a room" class="w-full h-full object-cover" />
+            </div>
+            <!-- Card Content -->
+            <div class="p-6">
+                <h3
+                    class="text-xl font-bold text-white text-center group-hover:text-orange-300 transition-colors duration-300">
+                    Create a room
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join a Room Card -->
+    <div class="group cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+        (click)="showJoinDialog()">
+        <div
+            class="bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-600 transition-colors duration-300">
+            <!-- Card Image -->
+            <div class="relative h-64 w-80 overflow-hidden">
+                <img src="/images/join.jpeg" alt="Join a room" class="w-full h-full object-cover" />
+            </div>
+            <!-- Card Content -->
+            <div class="p-6">
+                <h3
+                    class="text-xl font-bold text-white text-center group-hover:text-blue-300 transition-colors duration-300">
+                    Join a room
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Room Dialog -->
+<p-dialog header="Create a Room" [modal]="true" [(visible)]="showCreateRoomDialog" [style]="{ width: '25rem' }">
+    <span class="p-text-secondary block mb-8">Enter your name to create a room and proceed to the game lobby.</span>
+    <div class="flex items-center gap-4 mb-4">
+        <!-- <label for="create-username" class="font-semibold w-24">Your Name</label> -->
+        <input pInputText id="create-username" class="flex-auto" autocomplete="off" [(ngModel)]="username"
+            placeholder="Enter your name" (keyup.enter)="createRoom()" />
+    </div>
+    <div class="flex justify-end gap-2">
+        <p-button label="Cancel" severity="secondary" (click)="showCreateRoomDialog = false"
+            [disabled]="isCreatingRoom" />
+        <p-button label="Create" (click)="createRoom()" [loading]="isCreatingRoom" [disabled]="!username.trim()" />
+    </div>
+</p-dialog>
+
+<!-- Join Room Dialog -->
+<p-dialog header="Join a Room" [modal]="true" [(visible)]="showJoinRoomDialog" [style]="{ width: '25rem' }">
+    <span class="p-text-secondary block mb-8">Enter your name and room code to join an existing game.</span>
+
+    <div class="flex items-center gap-4 mb-4">
+        <!-- <label for="join-username" class="font-semibold w-24">Your Name</label> -->
+        <input pInputText id="join-username" class="flex-auto" autocomplete="off" [(ngModel)]="username"
+            placeholder="Enter your name" />
+    </div>
+
+    <div class="flex items-center gap-4 mb-4">
+        <!-- <label for="room-code" class="font-semibold w-24">Room Code</label> -->
+        <input pInputText id="room-code" class="flex-auto" autocomplete="off" [(ngModel)]="roomCode"
+            placeholder="Enter room code" (keyup.enter)="joinRoom()" />
+    </div>
+
+    <div class="flex justify-end gap-2">
+        <p-button label="Cancel" severity="secondary" (click)="showJoinRoomDialog = false" [disabled]="isJoiningRoom" />
+        <p-button label="Join" (click)="joinRoom()" [loading]="isJoiningRoom"
+            [disabled]="!username.trim() || !roomCode.trim()" />
+    </div>
+</p-dialog>

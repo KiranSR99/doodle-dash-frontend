@@ -1,0 +1,33 @@
+<div class="relative min-h-screen w-full">
+    <!-- Subtle Dot Grid Background -->
+    <div class="absolute inset-0 -z-10 h-full w-full bg-white" [ngStyle]="{
+        backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)',
+        backgroundSize: '16px 16px'
+    }"></div>
+
+    <!-- Main Content -->
+    <div class="grid h-screen place-items-center relative z-10">
+        <div class="flex flex-col items-center justify-center gap-4">
+            <h1 class="text-7xl font-extrabold font-space-grotesk">
+                Doodle <span class="text-green-400">Dash</span>
+            </h1>
+            <p class="text-xl font-semibold text-gray-600">
+                Unleash your creativity while our trained neural network tries to decode your
+                doodles in real-time. Can you outsmart the AI?
+            </p>
+            <div class="flex gap-1">
+                <button (click)="startSoloGame()" class="px-4 py-2 bg-green-400 text-white rounded hover:bg-green-600">
+                    Play Solo
+                </button>
+                <button routerLink="/multiplayer/room-entry"
+                    class="px-4 py-2 border-2 border-green-400 text-green-400 rounded hover:bg-green-400 hover:text-white bg-transparent">
+                    Play with a Friend
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Countdown -->
+    <app-game-start-countdown *ngIf="gameStartingCountdown" (countdownFinished)="gameStartingCountdown = false"
+        class="relative z-10"></app-game-start-countdown>
+</div>
